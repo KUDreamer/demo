@@ -68,7 +68,6 @@ fun DetailedRestaurant(navController: NavHostController) {
         }
     }
 }
-<<<<<<< HEAD
 
 private fun fetchRestaurantData(): RestaurantData? {
     val jsonString = """
@@ -420,6 +419,3 @@ fun DetailedRestaurantPreview() {
 fun handlePhoneClick(phoneNumber: String) {
     // TODO: 전화번호 클릭 이벤트 처리 로직 추가
 }
-=======
-//wewewe
->>>>>>> jungyubranch
