@@ -24,3 +24,4 @@ fun DetailedRestaurant(navController: NavHostController) {
         }
     }
 }
+//wewewe
