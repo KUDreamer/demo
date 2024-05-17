@@ -1,4 +1,6 @@
 package com.example.demo.screens
+
+
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -36,6 +38,18 @@ import androidx.navigation.compose.rememberNavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import com.example.demo.Routes
+
+object Routes {
+    object AddSchedule : Route("add_schedule")
+    object Date : Route("date")
+    object DetailedRestaurant : Route("detailed_restaurant")
+    object MainScreen : Route("main_screen")
+    object MyTrip : Route("my_trip")
+    object NewTrip : Route("new_trip")
+    object RestaurantList : Route("restaurant_list")
+
+    open class Route(val route: String)
+}
 
 data class RestaurantData(
     val name: String,
@@ -350,7 +364,7 @@ fun MainContent(restaurantData: RestaurantData, modifier: Modifier = Modifier, n
         }
         Button(
             onClick = {
-                navController.navigate(Routes.Date.route)
+                navController.navigate(Routes.MyTrip.route)
             },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
