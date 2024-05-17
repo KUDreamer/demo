@@ -42,9 +42,9 @@ val LocalNavGraphViewModelStoreOwner =
 fun NavGraph(navController: NavHostController, navViewModel: NavViewModel) {
 
     val startScreen = if (navViewModel.HasSchedule) {
-        Routes.MainScreen.route
+        Routes.DetailedRestaurant.route
     } else {
-        Routes.MyTrip.route
+        Routes.DetailedRestaurant.route
     }
 
     val navStoreOwner = rememberViewModelStoreOwner()
