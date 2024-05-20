@@ -275,7 +275,7 @@ private fun menu_box(blocks: List<MutableState<ListInfo>>, onCheckChange: () -> 
 
 
 @Composable
-private fun RestaurantList(navController: NavHostController) {
+fun RestaurantList(navController: NavHostController) {
     // 초기 데이터 및 상태 정의
     val images = R.drawable.exres
     val blocks = remember {

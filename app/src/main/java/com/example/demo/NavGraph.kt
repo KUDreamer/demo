@@ -44,7 +44,7 @@ fun NavGraph(navController: NavHostController, navViewModel: NavViewModel) {
     val startScreen = if (navViewModel.HasSchedule) {
         Routes.MainScreen.route
     } else {
-        Routes.MyTrip.route
+        Routes.MainScreen.route
     }
 
     val navStoreOwner = rememberViewModelStoreOwner()

@@ -289,7 +289,7 @@ private fun to_make_schedul(
 }
 
 @Composable
-private fun Date(navController: NavHostController) {
+ fun Date(navController: NavHostController) {
     var selectedDates by remember { mutableStateOf<List<LocalDate>>(emptyList()) }
     val isButtonEnabled = selectedDates.isNotEmpty()
 
