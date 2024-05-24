@@ -24,9 +24,12 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.ArrowForward
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -88,14 +91,20 @@ private fun SimpleCalendar(selectedDates: List<LocalDate>, onSelectDate: (List<L
             modifier = Modifier.fillMaxWidth().padding(8.dp),
             horizontalArrangement = Arrangement.Center
         ) {
-            Button(
+
+            IconButton(
                 onClick = { yearMonth = yearMonth.minusMonths(1) },
-                colors = ButtonDefaults.buttonColors(
-                    contentColor = Color.Black // 텍스트 색상 설정
-                )
+                modifier = Modifier
+                    .size(20.dp) // 아이콘 버튼 크기
+                    .offset(x = 0.dp,y=5.dp) // 위치 조정
+
             ) {
-                Text("<")
+                Icon(
+                    imageVector = Icons.Outlined.ArrowBack,
+                    contentDescription = "Menu"
+                )
             }
+
 
             Text(
                 text = "${yearMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault())} ${yearMonth.year}",
@@ -105,13 +114,16 @@ private fun SimpleCalendar(selectedDates: List<LocalDate>, onSelectDate: (List<L
                 fontWeight = FontWeight.Bold
             )
 
-            Button(
+            IconButton(
                 onClick = { yearMonth = yearMonth.plusMonths(1) },
-                colors = ButtonDefaults.buttonColors(
-                    contentColor = Color.Black // 텍스트 색상 설정
-                )
+                modifier = Modifier
+                    .size(20.dp) // 아이콘 버튼 크기
+                    .offset(x = 0.dp,y=5.dp) // 위치 조정
             ) {
-                Text(">")
+                Icon(
+                    imageVector = Icons.Outlined.ArrowForward,
+                    contentDescription = "Menu"
+                )
             }
         }
     }
@@ -189,14 +201,15 @@ private fun top_filed(navController: NavHostController) {
             .background(Color.White)  // 배경색 설정
     ) {
         // 버튼 위치 조정
-        Button(
+
+        IconButton(
             onClick = { navController.navigate(Routes.RestaurantList.route) },
             modifier = Modifier
                 .offset(x = 16.dp, y = 40.dp)  // 좌표로 위치 지정
                 .size(24.dp)  // 버튼 크기
         ) {
             Icon(
-                imageVector = Icons.Filled.Menu,
+                imageVector = Icons.Outlined.ArrowBack,
                 contentDescription = "Menu"
             )
         }

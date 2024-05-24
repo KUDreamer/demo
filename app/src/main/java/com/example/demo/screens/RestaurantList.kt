@@ -21,6 +21,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.ArrowForward
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -80,28 +82,20 @@ private fun FieldTop(navController: NavHostController, isActive: Boolean,blocks:
             .background(Color.White)
     ) {
         // 메뉴 버튼
-        Button(
+        IconButton(
             onClick = { navController.navigate(Routes.MyTrip.route) },
             modifier = Modifier
                 .offset(x = 16.dp, y = 40.dp)  // 좌표로 위치 지정
                 .size(24.dp)  // 버튼 크기
         ) {
             Icon(
-                imageVector = Icons.Filled.Menu,
-                contentDescription = "Menu"
+                imageVector = Icons.Outlined.ArrowBack,  // '<' 아이콘
+                contentDescription = "Back"
             )
         }
 
-//        Icon(
-//            imageVector = Icons.Filled.Menu,
-//            contentDescription = "Menu",
-//            modifier = Modifier.clickable({
-//                navController.navigate(Routes.MyTrip.route)
-//            }),
-//            tint = colorResource(id = R.color.gray)
-//        )
-        Button(
-            //onClick = { navController.navigate(Routes.Date.route,blocks) }
+        // 앞으로 가기 아이콘 버튼
+        IconButton(
             onClick = { navController.navigate(Routes.Date.route) },
             enabled = isActive,
             modifier = Modifier
@@ -109,8 +103,8 @@ private fun FieldTop(navController: NavHostController, isActive: Boolean,blocks:
                 .size(24.dp)  // 버튼 크기
         ) {
             Icon(
-                imageVector = Icons.Filled.Menu,
-                contentDescription = "Menu"
+                imageVector = Icons.Outlined.ArrowForward,  // '>' 아이콘
+                contentDescription = "Forward"
             )
         }
 
