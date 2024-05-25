@@ -1,11 +1,13 @@
 package com.example.demo.screens
 
+import android.util.Log
+import android.widget.Toast
 import com.example.demo.R
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,29 +21,29 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.lazy.LazyListItemInfo
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldColors
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,13 +56,30 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
+import androidx.compose.ui.zIndex
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.systemGestureExclusion
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import kotlinx.coroutines.Job
+
+// drawer swipe 제한을 위한 변수
+var swipeState = true
 
 // 폰트 적용을 위한 설정
 private val pretendard_family = FontFamily(
@@ -81,7 +100,9 @@ private data class main_item(
     var rate_num: String,
     var location: String,
     var details: String,
-    var image_list: List<String>
+    var image_list: List<String>,
+
+    // var link: String?// ?? 자세히보기 넘어갈때 필요한 것
 )
 
 private data class filter_item(var text: String, var isChecked: Boolean)
@@ -92,7 +113,9 @@ private data class drawer_item(
     var rate_num: String,
     var isPinned: Boolean,
     var start_date: String,
-    var end_date: String
+    var end_date: String,
+
+    // var link: String?// ?? 자세히보기 넘어갈 때 필요한 것
 )
 
 // 서버로 부터 받은 데이터 가공
@@ -127,15 +150,6 @@ private fun process_date(): List<main_item> {
     )
 }
 
-@Composable
-private fun simpleIcon(id: Int, size: Dp) {
-    Icon(
-        painter = painterResource(id = id),
-        contentDescription = "",
-        modifier = Modifier.size(size)
-    )
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun detailedScheduleMain() {
@@ -166,120 +180,198 @@ fun detailedScheduleMain() {
     val data_list = process_date()
 
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Spacer(modifier = Modifier.height(30.dp))
-        Column() {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // 맨위
-                Icon(
-                    painter = painterResource(id = R.drawable.ljw_outline_home_96),
-                    contentDescription = "",
-                    modifier = Modifier.size(32.dp)
-                )
+    // custom bottom sheet; drawer
+    val scaffoldSheetState = rememberBottomSheetScaffoldState()
+    val scope = rememberCoroutineScope()
+    Scaffold(
+//        bottomBar = {
+//
+//        },
+    ) { innerPadding ->
+        // 40.dp for the drag handle
+        val bottomPadding = innerPadding.calculateBottomPadding() + 40.dp
+        BottomSheetScaffold(
+            sheetSwipeEnabled = swipeState,
+            scaffoldState = scaffoldSheetState,
+            sheetPeekHeight = bottomPadding,
+            sheetContainerColor = colorResource(id = R.color.white),
+            sheetDragHandle = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.background),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    BottomSheetDefaults.DragHandle()
+                }
+            },
+            modifier = Modifier.padding(innerPadding),
+            sheetContent = {
+                Column(
+                    Modifier
+                        .padding(bottom = bottomPadding)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+
+
+                    drawer()
+
+
+//                    Text("Sheet content")
+//                    Spacer(Modifier.height(600.dp))
+//                    Button(onClick = {
+//                        scope.launch { scaffoldSheetState.bottomSheetState.partialExpand() }
+//                    }) {
+//                        Text("Hide bottom sheet")
+//                    }
+//                    Button(onClick = { }) {
+//                        Text("Some button")
+//                    }
+                }
+            },
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(it)
+                    .fillMaxSize(),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+
+
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Spacer(modifier = Modifier.height(30.dp))
+                    Column() {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            // 맨위
+                            Icon(
+                                painter = painterResource(id = R.drawable.ljw_outline_home_96),
+                                contentDescription = "",
+                                modifier = Modifier.size(32.dp)
+                            )
 //                TextField(value = plan_name,
 //                    textStyle = TextStyle.Default.copy(fontFamily = pretendard_family, fontWeight = FontWeight.ExtraBold, fontSize = 32.sp),
 //                    modifier = Modifier
 //                        .padding(14.dp, 0.dp, 14.dp, 0.dp)
 //                        .wrapContentSize(),
 //                    onValueChange = { it -> plan_name = it})
-                BasicTextField(value = plan_name,
-                    textStyle = TextStyle.Default.copy(
-                        fontFamily = pretendard_family,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 32.sp
-                    ),
-                    modifier = Modifier
-                        .padding(14.dp, 0.dp, 14.dp, 0.dp)
-                        .wrapContentSize()
-                        .width(261.dp)
-                        .drawBehind {
-                            val y = size.height
+                            BasicTextField(value = plan_name,
+                                textStyle = TextStyle.Default.copy(
+                                    fontFamily = pretendard_family,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 32.sp
+                                ),
+                                modifier = Modifier
+                                    .padding(14.dp, 0.dp, 14.dp, 0.dp)
+                                    .wrapContentSize()
+                                    .width(261.dp)
+                                    .drawBehind {
+                                        val y = size.height
 
-                            drawLine(
-                                color = Color.Black,
-                                Offset(0f, y),
-                                Offset(size.width, y),
-                                strokeWidth = 5f
+                                        drawLine(
+                                            color = Color.Black,
+                                            Offset(0f, y),
+                                            Offset(size.width, y),
+                                            strokeWidth = 5f
+                                        )
+                                    },
+                                onValueChange = { it -> plan_name = it }
                             )
-                        },
-                    onValueChange = { it -> plan_name = it }
-                )
-                Icon(
-                    painter = painterResource(id = R.drawable.ljw_outline_save_96),
-                    contentDescription = "",
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-            Spacer(modifier = Modifier.height(30.dp))
-            Row(horizontalArrangement = Arrangement.Center) {
-                // 검색어 부분
-                Box(
-                    contentAlignment = Alignment.TopEnd,
-                    modifier = Modifier
-                        .wrapContentSize()
-                        .width(342.dp)
-                ) {
-                    val hintVisibility by remember {
-                        derivedStateOf {
-                            search_words.isEmpty()
+                            Icon(
+                                painter = painterResource(id = R.drawable.ljw_outline_save_96),
+                                contentDescription = "",
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(30.dp))
+                        Row(horizontalArrangement = Arrangement.Center) {
+                            // 검색어 부분
+                            Box(
+                                contentAlignment = Alignment.TopEnd,
+                                modifier = Modifier
+                                    .wrapContentSize()
+                                    .width(342.dp)
+                            ) {
+                                val hintVisibility by remember {
+                                    derivedStateOf {
+                                        search_words.isEmpty()
+                                    }
+                                }
+                                if (hintVisibility) {
+                                    // placeholder용 Text
+                                    Text(
+                                        text = "어떤 이유",
+                                        modifier = Modifier
+                                            .alpha(0.5f)
+                                            .fillMaxWidth()
+                                    )
+                                }
+
+                                val interactionSource = remember { MutableInteractionSource() }
+
+                                BasicTextField(
+                                    value = search_words,
+                                    textStyle = TextStyle.Default.copy(
+                                        fontFamily = pretendard_family,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        fontSize = 20.sp
+                                    ),
+                                    singleLine = true,
+
+                                    modifier = Modifier
+                                        .width(342.dp)
+                                        .height(25.dp)
+                                        .drawBehind {
+                                            val y = size.height
+
+                                            drawLine(
+                                                color = Color.Black,
+                                                Offset(0f, y),
+                                                Offset(size.width, y),
+                                                strokeWidth = 2f
+                                            )
+                                        },
+                                    onValueChange = { it -> search_words = it })
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ljw_outline_search_96),
+                                    contentDescription = "",
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+                        Row() {
+                            // 필터
+
+                            for (it in filter_list) {
+                                filterItems(it = it)
+                            }
+
                         }
                     }
-                    if (hintVisibility) {
-                        // placeholder용 Text
-                        Text(
-                            text = "어떤 이유",
-                            modifier = Modifier
-                                .alpha(0.5f)
-                                .fillMaxWidth()
-                        )
-                    }
-                    BasicTextField(
-                        value = search_words,
-                        textStyle = TextStyle.Default.copy(
-                            fontFamily = pretendard_family,
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 20.sp
-                        ),
-                        modifier = Modifier
-                            .width(342.dp)
-                            .height(25.dp)
-                            .drawBehind {
-                                val y = size.height
-
-                                drawLine(
-                                    color = Color.Black,
-                                    Offset(0f, y),
-                                    Offset(size.width, y),
-                                    strokeWidth = 2f
+                    Spacer(modifier = Modifier.height(27.dp))
+                    LazyColumn(verticalArrangement = Arrangement.spacedBy(27.dp)) {
+                        // 커스텀 아이템 들어가기
+                        itemsIndexed(items = data_list) { index, it ->
+                            mainItem(it = it)
+                            Spacer(modifier = Modifier.height(27.dp))
+                            if (index < data_list.lastIndex) {
+                                Divider(
+                                    color = colorResource(id = R.color.text_gray2),
+                                    modifier = Modifier.width(342.dp)
                                 )
-                            },
-                        onValueChange = { it -> search_words = it })
-                    simpleIcon(id = R.drawable.ljw_outline_search_96, size = 24.dp)
-                }
-            }
-            Row() {
-                // 필터
+                            }
+                        }
+                    }
 
-                for (it in filter_list) {
-                    filterItems(it = it)
+
                 }
+
 
             }
         }
-        Spacer(modifier = Modifier.height(27.dp))
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(27.dp)) {
-            // 커스텀 아이템 들어가기
-            itemsIndexed(items = data_list) {index, it->
-                mainItem(it = it)
-                Spacer(modifier = Modifier.height(27.dp))
-                if(index < data_list.lastIndex) {
-                    Divider(color = colorResource(id = R.color.text_gray2), modifier = Modifier.width(342.dp))
-                }
-            }
-        }
-
-
     }
+
 
 }
 
@@ -341,7 +433,10 @@ private fun mainItem(it: main_item) {
     val image_list = it.image_list
 
     Column() {
-        Row(horizontalArrangement = Arrangement.SpaceAround, verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Column(modifier = Modifier.width(304.dp)) {
                 Text(
                     text = title,
@@ -351,7 +446,10 @@ private fun mainItem(it: main_item) {
                     color = colorResource(R.color.hyperlink),
                     modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 2.dp)
                 )
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 3.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 3.dp)
+                ) {
                     Text(
                         text = type,
                         fontWeight = FontWeight.W100,
@@ -405,10 +503,11 @@ private fun mainItem(it: main_item) {
                 )
             }
             Icon(
-                painter = painterResource(id = R.drawable.ljw_outline_add_circle_outline_96), 
-                contentDescription = "", 
+                painter = painterResource(id = R.drawable.ljw_outline_add_circle_outline_96),
+                contentDescription = "",
                 tint = colorResource(id = R.color.palette1),
-                modifier = Modifier.size(48.dp))
+                modifier = Modifier.size(48.dp)
+            )
         }
 
 //        LazyRow() { // 이미지 들어가는 부분
@@ -420,18 +519,366 @@ private fun mainItem(it: main_item) {
     }
 }
 
+
+private fun process_drawer_data(): List<drawer_item> {
+
+
+//    var title: String,
+//    var type: String,
+//    var rate_mean: String,
+//    var rate_num: String,
+//    var isPinned: Boolean,
+//    var start_date: String,
+//    var end_date: String,
+//
+
+    return listOf<drawer_item>(
+        drawer_item("제목2", "date", "3.1", "(12)", false, "2024년 1월 1일", ""),
+        drawer_item("제목", "음식점", "1.7", "(109)", false, "", ""),
+        drawer_item("제목2", "여행지", "3.1", "(12)", false, "", "")
+    )
+}
+
+
 @Composable
-private fun Drawer() {
+fun rememberDragDropState(
+    lazyListState: LazyListState,
+    onSwap: (Int, Int) -> Unit
+): DragDropState {
+    val scope = rememberCoroutineScope()
+    val state = remember(lazyListState) {
+        DragDropState(
+            state = lazyListState,
+            onSwap = onSwap,
+            scope = scope
+        )
+    }
+    return state
+}
+
+fun LazyListState.getVisibleItemInfoFor(absoluteIndex: Int): LazyListItemInfo? {
+    return this
+        .layoutInfo
+        .visibleItemsInfo
+        .getOrNull(absoluteIndex - this.layoutInfo.visibleItemsInfo.first().index)
+}
+
+val LazyListItemInfo.offsetEnd: Int
+    get() = this.offset + this.size
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun LazyItemScope.DraggableItem(
+    dragDropState: DragDropState,
+    index: Int,
+    modifier: Modifier,
+    content: @Composable ColumnScope.(isDragging: Boolean) -> Unit
+) {
+    val current: Float by animateFloatAsState(dragDropState.draggingItemOffset * 0.67f)
+    val previous: Float by animateFloatAsState(dragDropState.previousItemOffset.value * 0.67f)
+    val dragging = index == dragDropState.currentIndexOfDraggedItem
+    val draggingModifier = if (dragging) {
+        Modifier
+            .zIndex(1f)
+            .graphicsLayer {
+                translationY = current
+            }
+    } else if (index == dragDropState.previousIndexOfDraggedItem) {
+        Modifier
+            .zIndex(1f)
+            .graphicsLayer {
+                translationY = previous
+            }
+    } else {
+        Modifier.animateItemPlacement(
+            tween(easing = FastOutLinearInEasing)
+        )
+    }
+    Column(modifier = modifier.then(draggingModifier)) {
+        content(dragging)
+    }
+}
+
+class DragDropState internal constructor(
+    val state: LazyListState,
+    private val scope: CoroutineScope,
+    private val onSwap: (Int, Int) -> Unit
+) {
+    private var draggedDistance by mutableStateOf(0f)
+    private var draggingItemInitialOffset by mutableStateOf(0)
+    internal val draggingItemOffset: Float
+        get() = draggingItemLayoutInfo?.let { item ->
+            draggingItemInitialOffset + draggedDistance - item.offset
+        } ?: 0f
+    private val draggingItemLayoutInfo: LazyListItemInfo?
+        get() = state.layoutInfo.visibleItemsInfo
+            .firstOrNull { it.index == currentIndexOfDraggedItem }
+
+    internal var previousIndexOfDraggedItem by mutableStateOf<Int?>(null)
+        private set
+    internal var previousItemOffset = Animatable(0f)
+        private set
+
+    // used to obtain initial offsets on drag start
+    private var initiallyDraggedElement by mutableStateOf<LazyListItemInfo?>(null)
+
+    var currentIndexOfDraggedItem by mutableStateOf<Int?>(null)
+
+    private val initialOffsets: Pair<Int, Int>?
+        get() = initiallyDraggedElement?.let { Pair(it.offset, it.offsetEnd) }
+
+    private val currentElement: LazyListItemInfo?
+        get() = currentIndexOfDraggedItem?.let {
+            state.getVisibleItemInfoFor(absoluteIndex = it)
+        }
+
+
+    fun onDragStart(offset: Offset) {
+        state.layoutInfo.visibleItemsInfo
+            .firstOrNull { item -> offset.y.toInt() in item.offset..(item.offset + item.size) }
+            ?.also {
+                currentIndexOfDraggedItem = it.index
+                initiallyDraggedElement = it
+                draggingItemInitialOffset = it.offset
+            }
+    }
+
+    fun onDragInterrupted() {
+        if (currentIndexOfDraggedItem != null) {
+            previousIndexOfDraggedItem = currentIndexOfDraggedItem
+            val startOffset = draggingItemOffset
+            scope.launch {
+                previousItemOffset.snapTo(startOffset)
+                previousItemOffset.animateTo(
+                    0f,
+                    tween(easing = FastOutLinearInEasing)
+                )
+                previousIndexOfDraggedItem = null
+            }
+        }
+        draggingItemInitialOffset = 0
+        draggedDistance = 0f
+        currentIndexOfDraggedItem = null
+        initiallyDraggedElement = null
+    }
+
+    fun onDrag(offset: Offset) {
+        draggedDistance += offset.y
+
+        initialOffsets?.let { (topOffset, bottomOffset) ->
+            val startOffset = topOffset + draggedDistance
+            val endOffset = bottomOffset + draggedDistance
+
+            currentElement?.let { hovered ->
+                state.layoutInfo.visibleItemsInfo
+                    .filterNot { item -> item.offsetEnd < startOffset || item.offset > endOffset || hovered.index == item.index }
+                    .firstOrNull { item ->
+                        val delta = (startOffset - hovered.offset)
+                        when {
+                            delta > 0 -> (endOffset > item.offsetEnd)
+                            else -> (startOffset < item.offset)
+                        }
+                    }
+                    ?.also { item ->
+                        currentIndexOfDraggedItem?.let { current ->
+                            scope.launch {
+                                onSwap.invoke(
+                                    current,
+                                    item.index
+                                )
+                            }
+                        }
+                        currentIndexOfDraggedItem = item.index
+                    }
+            }
+        }
+    }
+
+    fun checkForOverScroll(): Float {
+        return initiallyDraggedElement?.let {
+            val startOffset = it.offset + draggedDistance
+            val endOffset = it.offsetEnd + draggedDistance
+            return@let when {
+                draggedDistance > 0 -> (endOffset - state.layoutInfo.viewportEndOffset + 50f).takeIf { diff -> diff > 0 }
+                draggedDistance < 0 -> (startOffset - state.layoutInfo.viewportStartOffset - 50f).takeIf { diff -> diff < 0 }
+                else -> null
+            }
+        } ?: 0f
+    }
+}
+
+@Composable
+fun RearrangeItem(
+    title: String,
+    description: String
+
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                width = 2.dp,
+                color = Color.Blue,
+                shape = RoundedCornerShape(8.dp),
+            )
+            .background(Color.White)
+    ) {
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(vertical = 16.dp)
+                    .padding(horizontal = 12.dp),
+            ) {
+                Text(
+                    modifier = Modifier
+                        .wrapContentSize(),
+                    text = title,
+                    color = Color.Blue,
+                )
+                Text(
+                    modifier = Modifier
+                        .wrapContentSize()
+                        .padding(top = 8.dp),
+                    text = description,
+                    color = Color.Blue
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun drawer() {
+
+    var data_list = process_drawer_data()
+
+    var overscrollJob by remember { mutableStateOf<Job?>(null) }
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+    val dragDropState = rememberDragDropState(listState) { fromIndex, toIndex ->
+//        onSwap(fromIndex, toIndex)
+
+    }
+
+    Box(
+        modifier = Modifier
+            .draggable(
+                orientation = Orientation.Vertical,
+                state = rememberDraggableState {
+
+                }
+            )
+            .fillMaxWidth()
+            .wrapContentHeight()
+            .background(Color.Transparent)
+    ) {
+    }
+
+    LazyColumn(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        state = listState,
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
+            .pointerInput(dragDropState) {
+                detectDragGesturesAfterLongPress(
+                    onDrag = { change, offset ->
+                        change.consume()
+                        dragDropState.onDrag(offset = offset)
+
+                        if (overscrollJob?.isActive == true)
+                            return@detectDragGesturesAfterLongPress
+
+                        dragDropState
+                            .checkForOverScroll()
+                            .takeIf { it != 0f }
+                            ?.let {
+                                overscrollJob =
+                                    scope.launch {
+                                        dragDropState.state.animateScrollBy(
+                                            it * 1.3f, tween(easing = FastOutLinearInEasing)
+                                        )
+                                    }
+                            }
+                            ?: run { overscrollJob?.cancel() }
+                    },
+                    onDragStart = { offset ->
+                        dragDropState.onDragStart(offset)
+                        swipeState = !swipeState
+                        Log.d("aaaa", "시작")
+                    },
+                    onDragEnd = {
+                        dragDropState.onDragInterrupted()
+                        overscrollJob?.cancel()
+                        swipeState = !swipeState
+                        Log.d("aaaa", "끝")
+                    },
+                    onDragCancel = {
+                        dragDropState.onDragInterrupted()
+                        overscrollJob?.cancel()
+                        swipeState = !swipeState
+                    }
+                )
+            }
+    ) {
+        itemsIndexed(data_list) { index, it ->
+//            if (it.type == "date") {
+//                drawerItemsDate(it = it)
+//            } else {
+//                drawerItems(it = it)
+//            }
+//            if(index < data_list.lastIndex && it.type != "date") {
+//                Spacer(modifier = Modifier.height(12.dp))
+//                Divider(color = Color(0xFFCCCCCC), thickness = 1.dp, modifier = Modifier.width(353.dp))
+//            }
+
+            DraggableItem(
+                dragDropState = dragDropState,
+                index = index,
+                modifier = Modifier
+            ) { isDragging ->
+                if (it.type == "date") {
+                    drawerItemsDate(it = it)
+                } else {
+                    drawerItems(it = it)
+                }
+                if (index < data_list.lastIndex && it.type != "date") {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Divider(
+                        color = Color(0xFFCCCCCC),
+                        thickness = 1.dp,
+                        modifier = Modifier.width(353.dp)
+                    )
+                }
+            }
+        }
+    }
+
 
 }
 
 @Composable
-fun drawerItemsDate() {
-    // TODO: 날짜 생성기준
-    Row() {
-        simpleIcon(id = R.drawable.ljw_baseline_date_range_96, size = 32.dp)
+private fun drawerItemsDate(it: drawer_item) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.ljw_baseline_date_range_96),
+            contentDescription = "",
+            modifier = Modifier.size(32.dp)
+        )
         Text(
-            text = "2024년 01월 01일",
+            text = it.start_date,
             fontWeight = FontWeight.Bold,
             fontFamily = pretendard_family,
             fontSize = 28.sp
@@ -443,17 +890,58 @@ fun drawerItemsDate() {
 private fun drawerItems(it: drawer_item) {
     // parameter 결정, drawer에 있는 아이템을 따로 관리하는 리스트가 있어야 할듯
     var image_id: Int
-    Row() {
-        simpleIcon(id = R.drawable.ljw_baseline_drag_indicator_96, size = 32.dp)
-        Column() {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            painter = painterResource(id = R.drawable.ljw_baseline_drag_indicator_96),
+            contentDescription = "",
+            modifier = Modifier.size(32.dp)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Column(modifier = Modifier.width(244.dp)) {
             Text(
                 text = it.title,
                 fontFamily = pretendard_family,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
-            Row() {
-
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = it.type,
+                    fontWeight = FontWeight.W100,
+                    fontSize = 14.sp,
+                    fontFamily = pretendard_family,
+                    color = colorResource(R.color.text_gray)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Box( // 중간의 원
+                    contentAlignment = Alignment.Center,
+                    content = {},
+                    modifier = Modifier
+                        .size(4.dp)
+                        .fillMaxSize()
+                        .aspectRatio(1f)
+                        .background(Color.Black, shape = CircleShape)
+                )
+                Spacer(modifier = Modifier.width(5.dp))
+                Text(
+                    text = it.rate_mean,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp,
+                    fontFamily = pretendard_family
+                )
+                Icon(
+                    painter = painterResource(id = R.drawable.ljw_round_star_rate_96),
+                    contentDescription = "",
+                    tint = colorResource(id = R.color.rate_yellow),
+                    modifier = Modifier.size(20.dp)
+                )
+                Text(
+                    text = it.rate_num,
+                    fontWeight = FontWeight.W100,
+                    fontSize = 12.sp,
+                    fontFamily = pretendard_family,
+                    color = colorResource(id = R.color.text_gray2)
+                )
             }
         }
 
@@ -463,11 +951,19 @@ private fun drawerItems(it: drawer_item) {
             image_id = R.drawable.ljw_outline_push_pin_96
         }
 
+        Spacer(modifier = Modifier.size(18.dp))
         Icon(
             painter = painterResource(id = image_id),
             contentDescription = "",
+            tint = colorResource(id = R.color.palette1),
             modifier = Modifier.size(32.dp)
         )
-        simpleIcon(id = R.drawable.ljw_baseline_remove_circle_outline_96, size = 48.dp)
+        Spacer(modifier = Modifier.size(18.dp))
+        Icon(
+            painter = painterResource(id = R.drawable.ljw_baseline_remove_circle_outline_96),
+            contentDescription = "",
+            tint = colorResource(id = R.color.palette1),
+            modifier = Modifier.size(48.dp)
+        )
     }
 }
