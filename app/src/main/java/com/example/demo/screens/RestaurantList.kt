@@ -94,20 +94,6 @@ private fun FieldTop(navController: NavHostController, isActive: Boolean,blocks:
             )
         }
 
-        // 앞으로 가기 아이콘 버튼
-        IconButton(
-            onClick = { navController.navigate(Routes.Date.route) },
-            enabled = isActive,
-            modifier = Modifier
-                .offset(x = 360.dp, y = 40.dp)  // 좌표로 위치 지정
-                .size(24.dp)  // 버튼 크기
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.ArrowForward,  // '>' 아이콘
-                contentDescription = "Forward"
-            )
-        }
-
         // 검색 필드
         TextField(
             value = searchText,
@@ -143,10 +129,10 @@ private fun FieldTop(navController: NavHostController, isActive: Boolean,blocks:
         )
     }
 }
-
+//클릭커블
 
 @Composable
-private fun small_Box(blockA: MutableState<ListInfo>,onCheckChange: () -> Unit) {
+private fun small_Box(blockA: MutableState<ListInfo>, navController: NavHostController) {
     Column {
         Box(
             modifier = Modifier
@@ -167,7 +153,8 @@ private fun small_Box(blockA: MutableState<ListInfo>,onCheckChange: () -> Unit) 
                 .background(
                     Color.Gray,
                     shape = RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp)
-                ),
+                )
+                .clickable(onClick = { navController.navigate(Routes.DetailedRestaurant.route) }),
             contentAlignment = Alignment.Center
         ) {
             Image(
@@ -178,39 +165,13 @@ private fun small_Box(blockA: MutableState<ListInfo>,onCheckChange: () -> Unit) 
                     .clip(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp)),
                 contentScale = ContentScale.Crop
             )
-
-            // IconButton for checking and unchecking
-            IconButton(
-                onClick = {
-                    // Toggle the check status and visual appearance
-                    blockA.value = blockA.value.copy(che = !blockA.value.che)
-                    onCheckChange()
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(0.dp)
-                    .alpha(if (blockA.value.che) 1.0f else 0.5f)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Done,
-                    contentDescription = "Select",
-                    tint = if (blockA.value.che) Color(0xFFFF9730) else Color.White
-                )
-            }
         }
     }
 }
 
 
-
-
-
-
-
-
-
 @Composable
-private fun check_box_rest(blockA: MutableState<ListInfo>, blockB: MutableState<ListInfo>,onCheckChange: () -> Unit) {
+private fun check_box_rest(blockA: MutableState<ListInfo>, blockB: MutableState<ListInfo>,navController: NavHostController,) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -222,7 +183,7 @@ private fun check_box_rest(blockA: MutableState<ListInfo>, blockB: MutableState<
                 .size(140.dp)
                 .background(Color.Red, RoundedCornerShape(20.dp))
         ) {
-            small_Box(blockA, onCheckChange)  // 체크 상태 변경 함수 전달
+            small_Box(blockA,navController)  // 체크 상태 변경 함수 전달
         }
         Spacer(modifier = Modifier.width(40.dp))
         Box(
@@ -231,13 +192,13 @@ private fun check_box_rest(blockA: MutableState<ListInfo>, blockB: MutableState<
                 .size(140.dp)
                 .background(Color.Red, RoundedCornerShape(20.dp))
         ) {
-            small_Box(blockB, onCheckChange)  // 체크 상태 변경 함수 전달
+            small_Box(blockB,navController)  // 체크 상태 변경 함수 전달
         }
     }
 }
 
 @Composable
-private fun menu_box(blocks: List<MutableState<ListInfo>>, onCheckChange: () -> Unit) {
+private fun menu_box(blocks: List<MutableState<ListInfo>>,navController: NavHostController) {
 
 
     val configuration = LocalConfiguration.current
@@ -256,10 +217,10 @@ private fun menu_box(blocks: List<MutableState<ListInfo>>, onCheckChange: () -> 
             horizontalAlignment = Alignment.CenterHorizontally  // 모든 아이템을 가로 방향으로 중앙 정렬
         ) {
             // 첫 번째 행
-            check_box_rest(blocks[0],blocks[1], onCheckChange)
-            check_box_rest(blocks[2],blocks[3], onCheckChange)
-            check_box_rest(blocks[4],blocks[5], onCheckChange)
-            check_box_rest(blocks[6],blocks[7], onCheckChange)
+            check_box_rest(blocks[0],blocks[1],navController)
+            check_box_rest(blocks[2],blocks[3],navController)
+            check_box_rest(blocks[4],blocks[5],navController)
+            check_box_rest(blocks[6],blocks[7],navController)
             // 두 번째
         }
     }
@@ -306,7 +267,7 @@ fun RestaurantList(navController: NavHostController) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         FieldTop(navController, checkedCount.value > 0,blocks) // 활성화 상태 전달
-        menu_box(blocks, ::updateCheckState) // 체크 상태 업데이트 함수 전달
+        menu_box(blocks,navController) // 체크 상태 업데이트 함수 전달
     }
 }
 

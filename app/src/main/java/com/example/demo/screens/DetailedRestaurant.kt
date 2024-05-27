@@ -425,7 +425,7 @@ fun MainContent(restaurantData: RestaurantData, modifier: Modifier = Modifier, n
         }
         Button(
             onClick = {
-                navController.navigate(Routes.MyTrip.route)
+                navController.navigate(Routes.Date.route)
             },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
