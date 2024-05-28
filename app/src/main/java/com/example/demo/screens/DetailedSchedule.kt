@@ -1079,6 +1079,7 @@ fun DraggableLazyColumn(
                                                     onItemsChanged(updatedItems)
                                                     draggingIndex = newIndex
                                                     draggingOffsetY -= (newIndex - index) * itemHeight.toPx()
+//                                                    draggingOffsetY = 0f
                                                 }
 
                                         }
