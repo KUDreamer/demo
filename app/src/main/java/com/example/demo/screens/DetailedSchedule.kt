@@ -80,6 +80,9 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.systemGestureExclusion
 import androidx.compose.material.icons.Icons
+import androidx.compose.material3.Card
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.consumePositionChange
 import androidx.compose.ui.input.pointer.pointerInput
@@ -89,6 +92,15 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import kotlinx.coroutines.Job
 import kotlin.math.roundToInt
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Density
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
+import sh.calvin.reorderable.ReorderableListState
 
 // drawer swipe 제한을 위한 변수
 var swipeState = true
@@ -119,6 +131,7 @@ private data class main_item(
 
 private data class filter_item(var text: String, var isChecked: Boolean)
 data class drawer_item(
+    var id: Int,
     var title: String,
     var type: String,
     var rate_mean: String,
@@ -232,7 +245,12 @@ fun detailedScheduleMain() {
                     var data_list by remember {
                         mutableStateOf(process_drawer_data().toMutableList())
                     }
-                    DraggableLazyColumn(data_list) {
+
+//                    DraggableLazyColumn(data_list) {
+//                        data_list = it
+//                    }
+
+                    DraggableReordableLazyColumn(data_list) {
                         data_list = it
                     }
 
@@ -551,10 +569,10 @@ private fun process_drawer_data(): List<drawer_item> {
 //
 
     return listOf<drawer_item>(
-        drawer_item("제목1", "date", "3.1", "(12)", false, "2024년 1월 1일", ""),
-        drawer_item("제목2", "음식점", "1.7", "(109)", false, "", ""),
-        drawer_item("제목3", "여행지", "3.1", "(12)", false, "", ""),
-        drawer_item("제목4", "몰랑", "3.1", "(12)", false, "", "")
+        drawer_item(1, "제목1", "date", "3.1", "(12)", false, "2024년 1월 1일", ""),
+        drawer_item(2, "제목2", "음식점", "1.7", "(109)", false, "", ""),
+        drawer_item(3, "제목3", "여행지", "3.1", "(12)", false, "", ""),
+        drawer_item(4, "제목4", "몰랑", "3.1", "(12)", false, "", "")
     )
 }
 
@@ -996,176 +1014,262 @@ fun DraggableLazyColumn(
     items: MutableList<drawer_item>,
     onItemsChanged: (MutableList<drawer_item>) -> Unit
 ) {
-
-    var image_id: Int
     var draggingIndex by remember { mutableStateOf<Int?>(null) }
-    var offsetY by remember { mutableStateOf(0f) }
     var draggingOffsetY by remember { mutableStateOf(0f) }
-    var totalOffsetY by remember { mutableStateOf(0f) }
     val itemHeight = 48.dp
+    val density = LocalDensity.current
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-//        verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         itemsIndexed(items) { index, item ->
             val isDragging = draggingIndex == index
-            val animatedOffsetY by animateDpAsState(targetValue = if (isDragging) offsetY.dp else 0.dp)
-            if (item.type == "date") {
-                // date
-                drawerItemsDate(it = item)
+
+            val modifier = if (isDragging) {
+                Modifier
+                    .fillMaxWidth()
+                    .height(itemHeight)
+                    .offset { IntOffset(0, draggingOffsetY.roundToInt()) }
+                    .background(Color.LightGray)
             } else {
-                val modifier = if (isDragging) {
-                    Modifier
-                        .fillMaxWidth()
-                        .height(itemHeight)
-                        .offset { IntOffset(0, totalOffsetY.roundToInt()) } // 손가락 이동에 따른 아이템 이동
+                Modifier
+                    .fillMaxWidth()
+                    .height(itemHeight)
+                    .animateItemPlacement()
+            }
 
-                } else {
-                    Modifier
-                        .fillMaxWidth()
-                        .height(itemHeight)
-                        .animateItemPlacement() // 애니메이션 적용
-                }
-                // 각각의 아이템
-                Box(
-                    modifier = modifier
+            Box(modifier = modifier) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        .fillMaxSize()
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center,
+                    Icon(
+                        painter = painterResource(id = R.drawable.ljw_baseline_drag_indicator_96),
+                        contentDescription = "Drag Handle",
                         modifier = Modifier
-                            .fillMaxSize()
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ljw_baseline_drag_indicator_96),
-                            contentDescription = "Drag Handle",
-                            modifier = Modifier
-                                .size(24.dp)
-                                .pointerInput(Unit) {
-                                    detectDragGestures(
-                                        onDragStart = {
-                                            draggingIndex = index
-                                            draggingOffsetY = 0f
-                                            totalOffsetY = 0f
-                                        },
-                                        onDragEnd = {
-                                            draggingIndex = null
-                                            draggingOffsetY = 0f
-                                            totalOffsetY = 0f
-                                        },
-                                        onDragCancel = {
-                                            draggingIndex = null
-                                            draggingOffsetY = 0f
-                                            totalOffsetY = 0f
-                                        },
-                                        onDrag = { change, dragAmount ->
-                                            change.consume()
-                                            draggingOffsetY += dragAmount.y
-                                            totalOffsetY += dragAmount.y
-                                            // 총 오프셋 계산해서 업데이트
-                                            val totalOffset = draggingOffsetY / itemHeight.toPx()
-                                                // 새로운 인덱스 계산
-                                                val newIndex =
-                                                    (index + totalOffset.toInt()).coerceIn(
-                                                        0,
-                                                        items.size - 1
-                                                    )
-                                                if (newIndex != index && newIndex in items.indices) {
-                                                    val updatedItems = items.toMutableList()
-                                                    val movedItem = updatedItems.removeAt(index)
-                                                    updatedItems.add(newIndex, movedItem)
-                                                    onItemsChanged(updatedItems)
-                                                    draggingIndex = newIndex
-                                                    draggingOffsetY -= (newIndex - index) * itemHeight.toPx()
-//                                                    draggingOffsetY = 0f
-                                                }
+                            .size(24.dp)
+                            .pointerInput(Unit) {
+                                detectDragGestures(
+                                    onDragStart = {
+                                        draggingIndex = index
+                                        draggingOffsetY = 0f
+                                        Log.d("akka", "start")
+                                    },
+                                    onDragEnd = {
+                                        draggingIndex = null
+                                        draggingOffsetY = 0f
+                                        Log.d("akka", "end")
+                                    },
+                                    onDragCancel = {
+                                        draggingIndex = null
+                                        draggingOffsetY = 0f
+                                        Log.d("akka", "cancel")
+                                    },
+                                    onDrag = { change, dragAmount ->
+                                        change.consume()
+                                        draggingOffsetY += dragAmount.y
 
+                                        // Total offset in terms of item height
+                                        val totalOffset =
+                                            draggingOffsetY / with(density) { itemHeight.toPx() }
+                                        // New index calculation
+                                        val newIndex = (index + totalOffset.roundToInt()).coerceIn(
+                                            0,
+                                            items.size - 1
+                                        )
+
+                                        // Update items list if index has changed
+                                        if (newIndex != index) {
+                                            val updatedItems = items.toMutableList()
+                                            val movedItem = updatedItems.removeAt(index)
+                                            updatedItems.add(newIndex, movedItem)
+                                            onItemsChanged(updatedItems)
+
+                                            // Adjust dragging offset
+//                                            draggingOffsetY -= (newIndex - index) * with(density) { itemHeight.toPx() }
+                                            draggingIndex = newIndex
+                                            Log.d("akka", newIndex.toString())
                                         }
-                                    )
-                                }
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Column(modifier = Modifier.width(244.dp)) {
-                            Text(
-                                text = item.title,
-                                fontFamily = pretendard_family,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = item.type,
-                                    fontWeight = FontWeight.W100,
-                                    fontSize = 14.sp,
-                                    fontFamily = pretendard_family,
-                                    color = colorResource(R.color.text_gray)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Box( // 중간의 원
-                                    contentAlignment = Alignment.Center,
-                                    content = {},
-                                    modifier = Modifier
-                                        .size(4.dp)
-                                        .fillMaxSize()
-                                        .aspectRatio(1f)
-                                        .background(Color.Black, shape = CircleShape)
-                                )
-                                Spacer(modifier = Modifier.width(5.dp))
-                                Text(
-                                    text = item.rate_mean,
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 14.sp,
-                                    fontFamily = pretendard_family
-                                )
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ljw_round_star_rate_96),
-                                    contentDescription = "",
-                                    tint = colorResource(id = R.color.rate_yellow),
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Text(
-                                    text = item.rate_num,
-                                    fontWeight = FontWeight.W100,
-                                    fontSize = 12.sp,
-                                    fontFamily = pretendard_family,
-                                    color = colorResource(id = R.color.text_gray2)
+                                    }
                                 )
                             }
-                        }
-
-                        if (item.isPinned) {
-                            image_id = R.drawable.ljw_baseline_push_pin_96
-                        } else {
-                            image_id = R.drawable.ljw_outline_push_pin_96
-                        }
-
-                        Spacer(modifier = Modifier.size(18.dp))
-                        Icon(
-                            painter = painterResource(id = image_id),
-                            contentDescription = "",
-                            tint = colorResource(id = R.color.palette1),
-                            modifier = Modifier.size(32.dp)
-                        )
-                        Spacer(modifier = Modifier.size(18.dp))
-                        Icon(
-                            painter = painterResource(id = R.drawable.ljw_baseline_remove_circle_outline_96),
-                            contentDescription = "",
-                            tint = colorResource(id = R.color.palette1),
-                            modifier = Modifier.size(48.dp)
-                        )
-                    }
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    afterIcon(item = item)
                 }
-//                if (index < items.lastIndex) {
-//                    Spacer(modifier = Modifier.height(12.dp))
-//                    Divider(
-//                        color = Color(0xFFCCCCCC),
-//                        thickness = 1.dp,
-//                        modifier = Modifier.width(353.dp)
-//                    )
-//                }
             }
         }
     }
+}
+
+
+// https://github.com/Calvin-LL/Reorderable/?tab=readme-ov-file#lazycolumn
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@Composable
+fun DraggableReordableLazyColumn(
+    items: MutableList<drawer_item>,
+    onItemsChanged: (MutableList<drawer_item>) -> Unit
+) {
+//    val state = rememberReorderableLazyListState(onMove = { from, to ->
+//        val updatedItems = items.toMutableList()
+//        val item = updatedItems.removeAt(from.index)
+//        updatedItems.add(to.index, item)
+//        onItemsChanged(updatedItems)
+//    })
+    val lazyListState = rememberLazyListState()
+    val state = rememberReorderableLazyListState(lazyListState) { from, to ->
+        items.add(to.index, items.removeAt(from.index))
+        onItemsChanged(items)
+    }
+
+    LazyColumn(
+        state = lazyListState,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxSize()
+    ) {
+        itemsIndexed(items, key = null) { index, item ->
+            ReorderableItem(state = state, key = { items.indexOf(item) }) {
+                val interactionSource = remember { MutableInteractionSource() }
+                val elevation = animateDpAsState(if (it) 16.dp else 0.dp)
+                Card(
+                    onClick = {},
+                    interactionSource = interactionSource,
+                    modifier = Modifier.semantics {
+                        customActions = listOf(
+                            CustomAccessibilityAction(
+                                label = "Move Up",
+                                action = {
+                                    if (index > 0) {
+                                        items.apply { add(index - 1, removeAt(index)) }
+                                        onItemsChanged(items)
+                                        true
+                                    } else {
+                                        false
+                                    }
+                                }
+                            ),
+                            CustomAccessibilityAction(
+                                label = "Move Down",
+                                action = {
+                                    if (index < items.size - 1) {
+                                        items.apply {
+                                            add(index + 1, removeAt(index))
+                                        }
+                                        onItemsChanged(items)
+                                        true
+                                    } else {
+                                        false
+                                    }
+                                }
+                            ),
+                        )
+                    }
+                ) {
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Start,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                            .shadow(elevation.value)
+
+                    ) {
+                        IconButton(
+                            onClick = { },
+                            modifier = Modifier
+                                .wrapContentSize()
+                                .draggableHandle(interactionSource = interactionSource)
+                                .size(24.dp)
+                                .clearAndSetSemantics { }
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ljw_baseline_drag_indicator_96),
+                                contentDescription = "Drag Handle",
+                                modifier = Modifier
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        afterIcon(item = item)
+                    }
+                }
+            }
+
+        }
+    }
+}
+
+
+@Composable
+private fun afterIcon(item: drawer_item) {
+    val image_id: Int
+    Spacer(modifier = Modifier.width(4.dp))
+    Column(modifier = Modifier.width(244.dp)) {
+        Text(
+            text = item.title,
+            fontFamily = pretendard_family,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = item.type,
+                fontWeight = FontWeight.W100,
+                fontSize = 14.sp,
+                fontFamily = pretendard_family,
+                color = colorResource(R.color.text_gray)
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Box(
+                modifier = Modifier
+                    .size(4.dp)
+                    .aspectRatio(1f)
+                    .background(Color.Black, shape = CircleShape)
+            )
+            Spacer(modifier = Modifier.width(5.dp))
+            Text(
+                text = item.rate_mean,
+                fontWeight = FontWeight.Medium,
+                fontSize = 14.sp,
+                fontFamily = pretendard_family
+            )
+            Icon(
+                painter = painterResource(id = R.drawable.ljw_round_star_rate_96),
+                contentDescription = "",
+                tint = colorResource(id = R.color.rate_yellow),
+                modifier = Modifier.size(20.dp)
+            )
+            Text(
+                text = item.rate_num,
+                fontWeight = FontWeight.W100,
+                fontSize = 12.sp,
+                fontFamily = pretendard_family,
+                color = colorResource(id = R.color.text_gray2)
+            )
+        }
+    }
+
+    image_id = if (item.isPinned) {
+        R.drawable.ljw_baseline_push_pin_96
+    } else {
+        R.drawable.ljw_outline_push_pin_96
+    }
+
+    Spacer(modifier = Modifier.size(18.dp))
+    Icon(
+        painter = painterResource(id = image_id),
+        contentDescription = "",
+        tint = colorResource(id = R.color.palette1),
+        modifier = Modifier.size(32.dp)
+    )
+    Spacer(modifier = Modifier.size(18.dp))
+    Icon(
+        painter = painterResource(id = R.drawable.ljw_baseline_remove_circle_outline_96),
+        contentDescription = "",
+        tint = colorResource(id = R.color.palette1),
+        modifier = Modifier.size(48.dp)
+    )
 }
