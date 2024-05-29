@@ -50,7 +50,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -60,6 +59,9 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.coil.compose)
+    implementation(libs.sh.reorderable)
+    implementation(libs.sh.calvin.reorderable.reorderable)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -67,4 +69,10 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    implementation("io.coil-kt:coil-compose:2.1.0")
+    implementation ("androidx.compose.ui:ui:1.4.0") // or the latest stable version
+    implementation ("androidx.compose.material:material:1.4.0") // or the latest stable version
+    implementation ("androidx.compose.material3:material3:1.0.0-alpha13") // if you are using material3
+    implementation ("androidx.compose.ui:ui-tooling:1.4.0")
+    implementation ("androidx.navigation:navigation-compose:2.4.0-alpha10")
 }

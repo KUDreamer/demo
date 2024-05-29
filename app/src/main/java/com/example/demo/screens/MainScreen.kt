@@ -80,7 +80,7 @@ fun MainScreen(navController: NavHostController, trip: Trip) {
                     }
                 },
                 actions = {
-                    IconButton(onClick = {  }) {
+                    IconButton(onClick = { navController.navigate(Routes.DetailedSchedule.route) }) {
                         Icon(
                             imageVector = Icons.Outlined.Create,
                             contentDescription = "edit",
