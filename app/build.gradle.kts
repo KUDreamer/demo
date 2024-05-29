@@ -67,4 +67,9 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation("io.coil-kt:coil-compose:2.1.0")
+    implementation ("androidx.compose.ui:ui:1.4.0") // or the latest stable version
+    implementation ("androidx.compose.material:material:1.4.0") // or the latest stable version
+    implementation ("androidx.compose.material3:material3:1.0.0-alpha13") // if you are using material3
+    implementation ("androidx.compose.ui:ui-tooling:1.4.0")
+    implementation ("androidx.navigation:navigation-compose:2.4.0-alpha10")
 }

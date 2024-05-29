@@ -38,6 +38,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import com.example.demo.Routes
+import androidx.compose.material.TopAppBar
+import androidx.compose.material.icons.filled.ArrowBack
 
 object Routes {
     object AddSchedule : Route("add_schedule")
@@ -72,7 +74,18 @@ fun DetailedRestaurant(navController: NavHostController) {
     val restaurantData = fetchRestaurantData()
 
     DemoTheme {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            topBar = {
+                TopAppBar(
+                    title = { Text(text = "") },
+                    navigationIcon = {
+                        BackButton(navController = navController)
+                    },
+                    backgroundColor = Color.White
+                )
+            }
+        ) { innerPadding ->
             if (restaurantData != null) {
                 MainContent(
                     restaurantData = restaurantData,
@@ -83,6 +96,21 @@ fun DetailedRestaurant(navController: NavHostController) {
         }
     }
 }
+
+@Composable
+fun BackButton(navController: NavHostController) {
+    Icon(
+        imageVector = Icons.Default.ArrowBack,
+        contentDescription = "Back",
+        modifier = Modifier
+            .padding(16.dp)
+            .clickable {
+                navController.popBackStack()
+            }
+    )
+}
+
+
 
 private fun fetchRestaurantData(): RestaurantData? {
     val jsonString = """
