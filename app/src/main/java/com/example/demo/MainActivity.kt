@@ -11,6 +11,8 @@ import androidx.navigation.compose.rememberNavController
 import com.example.demo.screens.detailedScheduleMain
 import com.example.demo.ui.theme.DemoTheme
 
+
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,13 +23,10 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    /*
+
                     val navController = rememberNavController()
                     NavGraph(navController, NavViewModel())
 
-                     */
-                    // for test
-                    detailedScheduleMain()
                 }
             }
         }

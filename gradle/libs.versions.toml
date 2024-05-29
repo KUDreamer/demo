@@ -12,6 +12,7 @@ navigationCompose = "2.7.7"
 coilCompose = "2.6.0"
 reorderableVersion = "0.9.6"
 reorderable = "2.1.1"
+shReorderable = "2.1.1-dev2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -32,6 +33,7 @@ androidx-navigation-compose = { group = "androidx.navigation", name = "navigatio
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coilCompose" }
 reorderable = { group = "org.burnoutcrew.composereorderable", name = "reorderable", version.ref = "reorderableVersion" }
 sh-reorderable = { group = "sh.calvin.reorderable", name = "reorderable", version.ref = "reorderable" }
+sh-calvin-reorderable-reorderable = { group = "sh.calvin.reorderable", name = "reorderable", version.ref = "shReorderable" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

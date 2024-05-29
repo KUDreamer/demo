@@ -16,6 +16,7 @@ import com.example.demo.screens.MainScreen
 import com.example.demo.screens.MyTrip
 import com.example.demo.screens.NewTrip
 import com.example.demo.screens.RestaurantList
+import com.example.demo.screens.detailedScheduleMain
 
 sealed class Routes(val route: String) {
     object AddSchedule : Routes("AddSchedule")
@@ -25,6 +26,7 @@ sealed class Routes(val route: String) {
     object MyTrip : Routes("MyTrip")
     object NewTrip : Routes("NewTrip")
     object RestaurantList : Routes("RestaurantList")
+    object DetailedSchedule : Routes("DetailedSchedule")
 }
 
 @Composable
@@ -44,7 +46,7 @@ fun NavGraph(navController: NavHostController, navViewModel: NavViewModel) {
     val startScreen = if (navViewModel.HasSchedule) {
         Routes.MainScreen.route
     } else {
-        Routes.MyTrip.route
+        Routes.MainScreen.route
     }
 
     val navStoreOwner = rememberViewModelStoreOwner()
@@ -79,6 +81,10 @@ fun NavGraph(navController: NavHostController, navViewModel: NavViewModel) {
 
             composable(route = Routes.RestaurantList.route) {
                 RestaurantList(navController)
+            }
+
+            composable(route = Routes.DetailedSchedule.route) {
+                detailedScheduleMain(navController)
             }
         }
     }

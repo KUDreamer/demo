@@ -1,11 +1,11 @@
 package com.example.demo.screens
 
-
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -39,18 +39,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import com.example.demo.Routes
 
-object Routes {
-    object AddSchedule : Route("add_schedule")
-    object Date : Route("date")
-    object DetailedRestaurant : Route("detailed_restaurant")
-    object MainScreen : Route("main_screen")
-    object MyTrip : Route("my_trip")
-    object NewTrip : Route("new_trip")
-    object RestaurantList : Route("restaurant_list")
-
-    open class Route(val route: String)
-}
-
 data class RestaurantData(
     val name: String,
     val rating: String,
@@ -63,7 +51,8 @@ data class RestaurantData(
     val imageUrl4: String,
     val operatingHoursText: String,
     val hasOperatingHours: Boolean,
-    val hashtags: List<String>
+    val hashtags: List<String>,
+    val address: String
 )
 
 @Composable
@@ -97,7 +86,8 @@ private fun fetchRestaurantData(): RestaurantData? {
             "imageUrl4": "https://via.placeholder.com/85x200.png?text=Food+Image+4",
             "operatingHoursText": "평일\n09:00-13:00 브레이크 타임\n13:00 라스트 오더\n09:00-13:00 토요일\n09:00-13:00 일요일\n09:00-13:00 휴일\n09:00-13:00 그 외 쉬는날",
             "hasOperatingHours": true,
-            "hashtags": ["#냉면", "#마라마라", "#마라마라기"]
+            "hashtags": ["#냉면", "#마라마라", "#마라마라기"],
+            "address": "서울시 광진구 능동로 120"
         }
     """.trimIndent()
 
@@ -117,7 +107,8 @@ private fun fetchRestaurantData(): RestaurantData? {
             hasOperatingHours = jsonObject.getBoolean("hasOperatingHours"),
             hashtags = jsonObject.getJSONArray("hashtags").let { array ->
                 List(array.length()) { array.getString(it) }
-            }
+            },
+            address = jsonObject.getString("address")
         )
     } catch (e: Exception) {
         e.printStackTrace()
@@ -359,12 +350,70 @@ fun MainContent(restaurantData: RestaurantData, modifier: Modifier = Modifier, n
                 }
             }
             item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.location_on), // 위치 아이콘
+                        contentDescription = "위치 아이콘",
+                        tint = Color.Black,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = restaurantData.address,
+                        fontSize = 14.sp,
+                        fontFamily = FontFamily(Font(R.font.pretandard_variable)),
+                        fontWeight = FontWeight.Normal,
+                        color = Color.Black,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .clickable { /* TODO: 지도보기 클릭 이벤트 처리 */ }
+                            .size(width = 102.dp, height = 30.dp) // 크기 조정
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.rectangle_62), // 배경 설정
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier.fillMaxSize().padding(end = 4.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.location_on), // 위치 아이콘 (필요한 경우 아이콘 리소스 변경)
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "지도보기",
+                                color = Color.Black,
+                                fontSize = 10.sp,
+                                fontFamily = FontFamily(Font(R.font.pretandard_variable)),
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                    }
+                }
+            }
+            item {
                 Spacer(modifier = Modifier.height(100.dp))
             }
         }
         Button(
             onClick = {
-                navController.navigate(Routes.MyTrip.route)
+                navController.navigate(Routes.Date.route)
             },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -424,7 +473,8 @@ fun DetailedRestaurantPreview() {
                 09:00-13:00 그 외 쉬는날
             """.trimIndent(),
             hasOperatingHours = true,
-            hashtags = listOf("#냉면", "#마라마라", "#마라마라기")
+            hashtags = listOf("#냉면", "#마라마라", "#마라마라기"),
+            address = "서울시 광진구 능동로 120"
         )
         MainContent(restaurantData = sampleData, navController = rememberNavController())
     }
@@ -432,4 +482,8 @@ fun DetailedRestaurantPreview() {
 
 fun handlePhoneClick(phoneNumber: String) {
     // TODO: 전화번호 클릭 이벤트 처리 로직 추가
+}
+
+fun handleMapClick(address: String) {
+    // TODO: 지도보기 클릭 이벤트 처리 로직 추가
 }

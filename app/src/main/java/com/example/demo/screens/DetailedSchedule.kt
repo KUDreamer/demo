@@ -1,7 +1,6 @@
 package com.example.demo.screens
 
 import android.util.Log
-import android.widget.Toast
 import com.example.demo.R
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -66,29 +65,22 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.systemGestureExclusion
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Card
 import androidx.compose.material3.IconButton
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.consumePositionChange
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.DpOffset
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import kotlinx.coroutines.Job
 import kotlin.math.roundToInt
@@ -97,10 +89,10 @@ import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.Density
+import androidx.navigation.NavHostController
+import com.example.demo.Routes
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
-import sh.calvin.reorderable.ReorderableListState
 
 // drawer swipe 제한을 위한 변수
 var swipeState = true
@@ -177,7 +169,7 @@ private fun process_date(): List<main_item> {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun detailedScheduleMain() {
+fun detailedScheduleMain(navController: NavHostController) {
 
     // 일정 이름
     var plan_name by remember {
@@ -281,14 +273,17 @@ fun detailedScheduleMain() {
                     Column() {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             // 맨위
-                            Icon(
-                                painter = painterResource(id = R.drawable.ljw_outline_home_96),
-                                contentDescription = "",
-                                modifier = Modifier.size(32.dp)
-                            )
+                            IconButton(onClick = { navController.navigate(Routes.MyTrip.route) }) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ljw_outline_home_96),
+                                    contentDescription = "",
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                )
+                            }
 //                TextField(value = plan_name,
 //                    textStyle = TextStyle.Default.copy(fontFamily = pretendard_family, fontWeight = FontWeight.ExtraBold, fontSize = 32.sp),
-//                    modifier = Modifier
+//                    modifier = Modifiers
 //                        .padding(14.dp, 0.dp, 14.dp, 0.dp)
 //                        .wrapContentSize(),
 //                    onValueChange = { it -> plan_name = it})
