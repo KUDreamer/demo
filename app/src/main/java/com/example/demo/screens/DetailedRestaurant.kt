@@ -1,11 +1,9 @@
 package com.example.demo.screens
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,13 +11,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.demo.ui.theme.DemoTheme
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,16 +25,17 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import coil.compose.AsyncImage
 import com.example.demo.R
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.example.demo.ui.theme.DemoTheme
 import org.json.JSONObject
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import com.example.demo.Routes
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import com.example.demo.Routes
 
 data class RestaurantData(
     val name: String,
@@ -98,8 +94,6 @@ fun BackButton(navController: NavHostController) {
     )
 }
 
-
-
 private fun fetchRestaurantData(): RestaurantData? {
     val jsonString = """
         {
@@ -147,6 +141,7 @@ private fun fetchRestaurantData(): RestaurantData? {
 @Composable
 fun MainContent(restaurantData: RestaurantData, modifier: Modifier = Modifier, navController: NavHostController) {
     var isExpanded by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Box(modifier = modifier.fillMaxSize()) {
         LazyColumn(
@@ -403,7 +398,12 @@ fun MainContent(restaurantData: RestaurantData, modifier: Modifier = Modifier, n
                     Spacer(modifier = Modifier.width(8.dp))
                     Box(
                         modifier = Modifier
-                            .clickable { /* TODO: 지도보기 클릭 이벤트 처리 */ }
+                            .clickable {
+                                handleMapClick(
+                                    "https://www.google.com/maps/place/%EC%B0%B8%EB%A7%9B%EC%A7%91/data=!4m10!1m2!2m1!1z66eb7KeR!3m6!1s0x357ca38cd1268333:0x9b7d8a1cb4a868ca!8m2!3d37.5656544!4d126.9647906!15sCgbrp5vsp5FaCCIG66eb7KeRkgETYmFyYmVjdWVfcmVzdGF1cmFudJoBI0NoWkRTVWhOTUc5blMwVkpRMEZuU1VOcGNXVXRSMWhuRUFF4AEA!16s%2Fg%2F11hz5vqk8_?entry=ttu",
+                                    context
+                                )
+                            }
                             .size(width = 102.dp, height = 30.dp) // 크기 조정
                     ) {
                         Image(
@@ -415,7 +415,9 @@ fun MainContent(restaurantData: RestaurantData, modifier: Modifier = Modifier, n
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxSize().padding(end = 4.dp)
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(end = 4.dp)
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.location_on), // 위치 아이콘 (필요한 경우 아이콘 리소스 변경)
@@ -512,6 +514,15 @@ fun handlePhoneClick(phoneNumber: String) {
     // TODO: 전화번호 클릭 이벤트 처리 로직 추가
 }
 
-fun handleMapClick(address: String) {
-    // TODO: 지도보기 클릭 이벤트 처리 로직 추가
+fun handleMapClick(url: String, context: Context) {
+    // Create an intent using the provided URL
+    val mapIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+    mapIntent.setPackage("com.google.android.apps.maps")
+    if (mapIntent.resolveActivity(context.packageManager) != null) {
+        context.startActivity(mapIntent)
+    } else {
+        // If Google Maps app is not installed, open with web browser
+        val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        context.startActivity(webIntent)
+    }
 }
