@@ -100,7 +100,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Density
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
-import sh.calvin.reorderable.ReorderableListState
 
 // drawer swipe 제한을 위한 변수
 var swipeState = true
@@ -252,6 +251,8 @@ fun detailedScheduleMain() {
 
                     DraggableReordableLazyColumn(data_list) {
                         data_list = it
+
+                        Log.d("qqwq", "aaa")
                     }
 
 //                    Text("Sheet content")
@@ -1123,6 +1124,7 @@ fun DraggableReordableLazyColumn(
     val state = rememberReorderableLazyListState(lazyListState) { from, to ->
         items.add(to.index, items.removeAt(from.index))
         onItemsChanged(items)
+
     }
 
     LazyColumn(
@@ -1130,8 +1132,8 @@ fun DraggableReordableLazyColumn(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.fillMaxSize()
     ) {
-        itemsIndexed(items, key = null) { index, item ->
-            ReorderableItem(state = state, key = { items.indexOf(item) }) {
+        itemsIndexed(items, key = {index, item -> item.id}) { index, item ->
+            ReorderableItem(state = state, key = { item.id }) {
                 val interactionSource = remember { MutableInteractionSource() }
                 val elevation = animateDpAsState(if (it) 16.dp else 0.dp)
                 Card(
@@ -1143,7 +1145,7 @@ fun DraggableReordableLazyColumn(
                                 label = "Move Up",
                                 action = {
                                     if (index > 0) {
-                                        items.apply { add(index - 1, removeAt(index)) }
+                                        items.add(index - 1, items.removeAt(index))
                                         onItemsChanged(items)
                                         true
                                     } else {
@@ -1155,9 +1157,7 @@ fun DraggableReordableLazyColumn(
                                 label = "Move Down",
                                 action = {
                                     if (index < items.size - 1) {
-                                        items.apply {
-                                            add(index + 1, removeAt(index))
-                                        }
+                                        items.add(index + 1, items.removeAt(index))
                                         onItemsChanged(items)
                                         true
                                     } else {
@@ -1182,7 +1182,14 @@ fun DraggableReordableLazyColumn(
                             onClick = { },
                             modifier = Modifier
                                 .wrapContentSize()
-                                .draggableHandle(interactionSource = interactionSource)
+                                .draggableHandle(
+                                    onDragStarted = {
+
+                                    },
+                                    onDragStopped = {
+
+                                    },
+                                    interactionSource = interactionSource)
                                 .size(24.dp)
                                 .clearAndSetSemantics { }
                         ) {
