@@ -78,6 +78,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Card
 import androidx.compose.material3.IconButton
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -91,8 +92,14 @@ import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.navigation.NavHostController
 import com.example.demo.Routes
-import sh.calvin.reorderable.ReorderableItem
-import sh.calvin.reorderable.rememberReorderableLazyListState
+import org.burnoutcrew.reorderable.ReorderableItem
+import org.burnoutcrew.reorderable.detectReorder
+import org.burnoutcrew.reorderable.detectReorderAfterLongPress
+import org.burnoutcrew.reorderable.rememberReorderableLazyListState
+import org.burnoutcrew.reorderable.reorderable
+
+//import sh.calvin.reorderable.ReorderableItem
+//import sh.calvin.reorderable.*
 
 // drawer swipe 제한을 위한 변수
 var swipeState = true
@@ -232,30 +239,94 @@ fun detailedScheduleMain(navController: NavHostController) {
                 ) {
 
 
-//                    drawer()
-
                     var data_list by remember {
-                        mutableStateOf(process_drawer_data().toMutableList())
+                        mutableStateOf(process_drawer_data())
                     }
 
-//                    DraggableLazyColumn(data_list) {
-//                        data_list = it
-//                    }
+                    val lazyListState = rememberLazyListState()
 
-                    DraggableReordableLazyColumn(data_list) {
-                        data_list = it
+                    val state = rememberReorderableLazyListState(onMove = { from, to ->
+                        // 아이템을 이동
+                        val updatedItems = data_list.toMutableList()
+                        val item = updatedItems.removeAt(from.index)
+                        updatedItems.add(to.index, item)
+                        data_list = updatedItems // 업데이트된 리스트 전달, 이 함수가 작동해도 제대로 업데이트가 이루어지지 않음
+
+                    }, listState = lazyListState)
+
+
+                    // DraggableLazyColumn
+                    LazyColumn(
+                        state = lazyListState,
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.White)
+                            .reorderable(state)  // Reorderable modifier 추가
+                    ) {
+                        itemsIndexed(data_list, key = { _, item -> item.id }) { index, item ->
+                            if(item.type != "date") {
+                                ReorderableItem(state = state, key = item.id) { isDragging ->
+                                    val elevation =
+                                        animateDpAsState(if (isDragging) 16.dp else 0.dp)
+                                    Card(
+                                        onClick = {},
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .background(Color.White)
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Start,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .fillMaxSize()
+                                                .background(Color.White)
+                                                .padding(16.dp)
+                                                .shadow(elevation.value)
+                                        ) {
+                                            IconButton(
+                                                onClick = { },
+                                                modifier = Modifier
+                                                    .detectReorder(state)
+                                                    .wrapContentSize()
+                                                    .size(24.dp)
+                                            ) {
+                                                Icon(
+                                                    painter = painterResource(id = R.drawable.ljw_baseline_drag_indicator_96),
+                                                    contentDescription = "Drag Handle",
+                                                    modifier = Modifier
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            afterIcon(item = item)
+                                        }
+                                    }
+                                }
+                            }
+                            else {
+                                ReorderableItem(state = state, key = item.id) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ljw_baseline_date_range_96),
+                                            contentDescription = "",
+                                            modifier = Modifier.size(32.dp)
+                                        )
+                                        Text(
+                                            text = item.start_date,
+                                            fontWeight = FontWeight.Bold,
+                                            fontFamily = pretendard_family,
+                                            fontSize = 28.sp
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
-
-//                    Text("Sheet content")
-//                    Spacer(Modifier.height(600.dp))
-//                    Button(onClick = {
-//                        scope.launch { scaffoldSheetState.bottomSheetState.partialExpand() }
-//                    }) {
-//                        Text("Hide bottom sheet")
-//                    }
-//                    Button(onClick = { }) {
-//                        Text("Some button")
-//                    }
                 }
             },
         ) {
@@ -281,12 +352,7 @@ fun detailedScheduleMain(navController: NavHostController) {
                                         .size(32.dp)
                                 )
                             }
-//                TextField(value = plan_name,
-//                    textStyle = TextStyle.Default.copy(fontFamily = pretendard_family, fontWeight = FontWeight.ExtraBold, fontSize = 32.sp),
-//                    modifier = Modifiers
-//                        .padding(14.dp, 0.dp, 14.dp, 0.dp)
-//                        .wrapContentSize(),
-//                    onValueChange = { it -> plan_name = it})
+
                             BasicTextField(value = plan_name,
                                 textStyle = TextStyle.Default.copy(
                                     fontFamily = pretendard_family,
@@ -339,7 +405,6 @@ fun detailedScheduleMain(navController: NavHostController) {
                                     )
                                 }
 
-                                val interactionSource = remember { MutableInteractionSource() }
 
                                 BasicTextField(
                                     value = search_words,
@@ -567,335 +632,8 @@ private fun process_drawer_data(): List<drawer_item> {
         drawer_item(1, "제목1", "date", "3.1", "(12)", false, "2024년 1월 1일", ""),
         drawer_item(2, "제목2", "음식점", "1.7", "(109)", false, "", ""),
         drawer_item(3, "제목3", "여행지", "3.1", "(12)", false, "", ""),
-        drawer_item(4, "제목4", "몰랑", "3.1", "(12)", false, "", "")
+//        drawer_item(4, "제목4", "몰랑", "3.1", "(12)", false, "", "")
     )
-}
-
-
-@Composable
-fun rememberDragDropState(
-    lazyListState: LazyListState,
-    onSwap: (Int, Int) -> Unit
-): DragDropState {
-    val scope = rememberCoroutineScope()
-    val state = remember(lazyListState) {
-        DragDropState(
-            state = lazyListState,
-            onSwap = onSwap,
-            scope = scope
-        )
-    }
-    return state
-}
-
-fun LazyListState.getVisibleItemInfoFor(absoluteIndex: Int): LazyListItemInfo? {
-    return this
-        .layoutInfo
-        .visibleItemsInfo
-        .getOrNull(absoluteIndex - this.layoutInfo.visibleItemsInfo.first().index)
-}
-
-val LazyListItemInfo.offsetEnd: Int
-    get() = this.offset + this.size
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun LazyItemScope.DraggableItem(
-    dragDropState: DragDropState,
-    index: Int,
-    modifier: Modifier,
-    content: @Composable ColumnScope.(isDragging: Boolean) -> Unit
-) {
-    val current: Float by animateFloatAsState(dragDropState.draggingItemOffset * 0.67f)
-    val previous: Float by animateFloatAsState(dragDropState.previousItemOffset.value * 0.67f)
-    val dragging = index == dragDropState.currentIndexOfDraggedItem
-    val draggingModifier = if (dragging) {
-        Modifier
-            .zIndex(1f)
-            .graphicsLayer {
-                translationY = current
-            }
-    } else if (index == dragDropState.previousIndexOfDraggedItem) {
-        Modifier
-            .zIndex(1f)
-            .graphicsLayer {
-                translationY = previous
-            }
-    } else {
-        Modifier.animateItemPlacement(
-            tween(easing = FastOutLinearInEasing)
-        )
-    }
-    Column(modifier = modifier.then(draggingModifier)) {
-        content(dragging)
-    }
-}
-
-class DragDropState internal constructor(
-    val state: LazyListState,
-    private val scope: CoroutineScope,
-    private val onSwap: (Int, Int) -> Unit
-) {
-    private var draggedDistance by mutableStateOf(0f)
-    private var draggingItemInitialOffset by mutableStateOf(0)
-    internal val draggingItemOffset: Float
-        get() = draggingItemLayoutInfo?.let { item ->
-            draggingItemInitialOffset + draggedDistance - item.offset
-        } ?: 0f
-    private val draggingItemLayoutInfo: LazyListItemInfo?
-        get() = state.layoutInfo.visibleItemsInfo
-            .firstOrNull { it.index == currentIndexOfDraggedItem }
-
-    internal var previousIndexOfDraggedItem by mutableStateOf<Int?>(null)
-        private set
-    internal var previousItemOffset = Animatable(0f)
-        private set
-
-    // used to obtain initial offsets on drag start
-    private var initiallyDraggedElement by mutableStateOf<LazyListItemInfo?>(null)
-
-    var currentIndexOfDraggedItem by mutableStateOf<Int?>(null)
-
-    private val initialOffsets: Pair<Int, Int>?
-        get() = initiallyDraggedElement?.let { Pair(it.offset, it.offsetEnd) }
-
-    private val currentElement: LazyListItemInfo?
-        get() = currentIndexOfDraggedItem?.let {
-            state.getVisibleItemInfoFor(absoluteIndex = it)
-        }
-
-
-    fun onDragStart(offset: Offset) {
-        state.layoutInfo.visibleItemsInfo
-            .firstOrNull { item -> offset.y.toInt() in item.offset..(item.offset + item.size) }
-            ?.also {
-                currentIndexOfDraggedItem = it.index
-                initiallyDraggedElement = it
-                draggingItemInitialOffset = it.offset
-            }
-    }
-
-    fun onDragInterrupted() {
-        if (currentIndexOfDraggedItem != null) {
-            previousIndexOfDraggedItem = currentIndexOfDraggedItem
-            val startOffset = draggingItemOffset
-            scope.launch {
-                previousItemOffset.snapTo(startOffset)
-                previousItemOffset.animateTo(
-                    0f,
-                    tween(easing = FastOutLinearInEasing)
-                )
-                previousIndexOfDraggedItem = null
-            }
-        }
-        draggingItemInitialOffset = 0
-        draggedDistance = 0f
-        currentIndexOfDraggedItem = null
-        initiallyDraggedElement = null
-    }
-
-    fun onDrag(offset: Offset) {
-        draggedDistance += offset.y
-
-        initialOffsets?.let { (topOffset, bottomOffset) ->
-            val startOffset = topOffset + draggedDistance
-            val endOffset = bottomOffset + draggedDistance
-
-            currentElement?.let { hovered ->
-                state.layoutInfo.visibleItemsInfo
-                    .filterNot { item -> item.offsetEnd < startOffset || item.offset > endOffset || hovered.index == item.index }
-                    .firstOrNull { item ->
-                        val delta = (startOffset - hovered.offset)
-                        when {
-                            delta > 0 -> (endOffset > item.offsetEnd)
-                            else -> (startOffset < item.offset)
-                        }
-                    }
-                    ?.also { item ->
-                        currentIndexOfDraggedItem?.let { current ->
-                            scope.launch {
-                                onSwap.invoke(
-                                    current,
-                                    item.index
-                                )
-                            }
-                        }
-                        currentIndexOfDraggedItem = item.index
-                    }
-            }
-        }
-    }
-
-    fun checkForOverScroll(): Float {
-        return initiallyDraggedElement?.let {
-            val startOffset = it.offset + draggedDistance
-            val endOffset = it.offsetEnd + draggedDistance
-            return@let when {
-                draggedDistance > 0 -> (endOffset - state.layoutInfo.viewportEndOffset + 50f).takeIf { diff -> diff > 0 }
-                draggedDistance < 0 -> (startOffset - state.layoutInfo.viewportStartOffset - 50f).takeIf { diff -> diff < 0 }
-                else -> null
-            }
-        } ?: 0f
-    }
-}
-
-//@Composable
-//fun RearrangeItem(
-//    title: String,
-//    description: String
-//
-//) {
-//    Column(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .border(
-//                width = 2.dp,
-//                color = Color.Blue,
-//                shape = RoundedCornerShape(8.dp),
-//            )
-//            .background(Color.White)
-//    ) {
-//
-//        Row(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(start = 12.dp),
-//            verticalAlignment = Alignment.CenterVertically
-//        ) {
-//            Column(
-//                modifier = Modifier
-//                    .weight(1f)
-//                    .padding(vertical = 16.dp)
-//                    .padding(horizontal = 12.dp),
-//            ) {
-//                Text(
-//                    modifier = Modifier
-//                        .wrapContentSize(),
-//                    text = title,
-//                    color = Color.Blue,
-//                )
-//                Text(
-//                    modifier = Modifier
-//                        .wrapContentSize()
-//                        .padding(top = 8.dp),
-//                    text = description,
-//                    color = Color.Blue
-//                )
-//            }
-//        }
-//    }
-//}
-
-@Composable
-private fun drawer() {
-
-    var data_list = process_drawer_data().toMutableList()
-
-    var overscrollJob by remember { mutableStateOf<Job?>(null) }
-    val listState = rememberLazyListState()
-    val scope = rememberCoroutineScope()
-    val dragDropState = rememberDragDropState(listState) { fromIndex, toIndex ->
-//        onSwap(fromIndex, toIndex)
-    }
-
-    Box(
-        modifier = Modifier
-            .draggable(
-                orientation = Orientation.Vertical,
-                state = rememberDraggableState {
-
-                }
-            )
-            .fillMaxWidth()
-            .wrapContentHeight()
-            .background(Color.Transparent)
-    ) {
-
-
-        LazyColumn(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            state = listState,
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight()
-                .pointerInput(dragDropState) {
-                    detectDragGesturesAfterLongPress(
-                        onDrag = { change, offset ->
-                            change.consume()
-                            dragDropState.onDrag(offset = offset)
-
-                            if (overscrollJob?.isActive == true)
-                                return@detectDragGesturesAfterLongPress
-
-                            dragDropState
-                                .checkForOverScroll()
-                                .takeIf { it != 0f }
-                                ?.let {
-                                    overscrollJob =
-                                        scope.launch {
-                                            dragDropState.state.animateScrollBy(
-                                                it * 1.3f, tween(easing = FastOutLinearInEasing)
-                                            )
-                                        }
-                                }
-                                ?: run { overscrollJob?.cancel() }
-                        },
-                        onDragStart = { offset ->
-                            dragDropState.onDragStart(offset)
-
-                            if (swipeState) swipeState = !swipeState
-                            Log.d("aaaa", "시작")
-                        },
-                        onDragEnd = {
-                            dragDropState.onDragInterrupted()
-                            overscrollJob?.cancel()
-                            if (!swipeState) swipeState = !swipeState
-                            Log.d("aaaa", "끝")
-                        },
-                        onDragCancel = {
-                            dragDropState.onDragInterrupted()
-                            overscrollJob?.cancel()
-                            if (!swipeState) swipeState = !swipeState
-                            Log.d("aaaa", "취소")
-                        }
-                    )
-                }
-        ) {
-            itemsIndexed(data_list) { index, it ->
-//            if (it.type == "date") {
-//                drawerItemsDate(it = it)
-//            } else {
-//                drawerItems(it = it)
-//            }
-//            if(index < data_list.lastIndex && it.type != "date") {
-//                Spacer(modifier = Modifier.height(12.dp))
-//                Divider(color = Color(0xFFCCCCCC), thickness = 1.dp, modifier = Modifier.width(353.dp))
-//            }
-
-                DraggableItem(
-                    dragDropState = dragDropState,
-                    index = index,
-                    modifier = Modifier
-                ) { isDragging ->
-                    if (it.type == "date") {
-                        drawerItemsDate(it = it)
-                    } else {
-                        drawerItems(it = it)
-                    }
-                    if (index < data_list.lastIndex && it.type != "date") {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Divider(
-                            color = Color(0xFFCCCCCC),
-                            thickness = 1.dp,
-                            modifier = Modifier.width(353.dp)
-                        )
-                    }
-                }
-            }
-        }
-    }
-
 }
 
 @Composable
@@ -1000,203 +738,6 @@ private fun drawerItems(it: drawer_item) {
         )
     }
 }
-
-
-// 진짜 찐 최종
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun DraggableLazyColumn(
-    items: MutableList<drawer_item>,
-    onItemsChanged: (MutableList<drawer_item>) -> Unit
-) {
-    var draggingIndex by remember { mutableStateOf<Int?>(null) }
-    var draggingOffsetY by remember { mutableStateOf(0f) }
-    val itemHeight = 48.dp
-    val density = LocalDensity.current
-
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        itemsIndexed(items) { index, item ->
-            val isDragging = draggingIndex == index
-
-            val modifier = if (isDragging) {
-                Modifier
-                    .fillMaxWidth()
-                    .height(itemHeight)
-                    .offset { IntOffset(0, draggingOffsetY.roundToInt()) }
-                    .background(Color.LightGray)
-            } else {
-                Modifier
-                    .fillMaxWidth()
-                    .height(itemHeight)
-                    .animateItemPlacement()
-            }
-
-            Box(modifier = modifier) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier
-                        .fillMaxSize()
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ljw_baseline_drag_indicator_96),
-                        contentDescription = "Drag Handle",
-                        modifier = Modifier
-                            .size(24.dp)
-                            .pointerInput(Unit) {
-                                detectDragGestures(
-                                    onDragStart = {
-                                        draggingIndex = index
-                                        draggingOffsetY = 0f
-                                        Log.d("akka", "start")
-                                    },
-                                    onDragEnd = {
-                                        draggingIndex = null
-                                        draggingOffsetY = 0f
-                                        Log.d("akka", "end")
-                                    },
-                                    onDragCancel = {
-                                        draggingIndex = null
-                                        draggingOffsetY = 0f
-                                        Log.d("akka", "cancel")
-                                    },
-                                    onDrag = { change, dragAmount ->
-                                        change.consume()
-                                        draggingOffsetY += dragAmount.y
-
-                                        // Total offset in terms of item height
-                                        val totalOffset =
-                                            draggingOffsetY / with(density) { itemHeight.toPx() }
-                                        // New index calculation
-                                        val newIndex = (index + totalOffset.roundToInt()).coerceIn(
-                                            0,
-                                            items.size - 1
-                                        )
-
-                                        // Update items list if index has changed
-                                        if (newIndex != index) {
-                                            val updatedItems = items.toMutableList()
-                                            val movedItem = updatedItems.removeAt(index)
-                                            updatedItems.add(newIndex, movedItem)
-                                            onItemsChanged(updatedItems)
-
-                                            // Adjust dragging offset
-//                                            draggingOffsetY -= (newIndex - index) * with(density) { itemHeight.toPx() }
-                                            draggingIndex = newIndex
-                                            Log.d("akka", newIndex.toString())
-                                        }
-                                    }
-                                )
-                            }
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    afterIcon(item = item)
-                }
-            }
-        }
-    }
-}
-
-
-// https://github.com/Calvin-LL/Reorderable/?tab=readme-ov-file#lazycolumn
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
-@Composable
-fun DraggableReordableLazyColumn(
-    items: MutableList<drawer_item>,
-    onItemsChanged: (MutableList<drawer_item>) -> Unit
-) {
-//    val state = rememberReorderableLazyListState(onMove = { from, to ->
-//        val updatedItems = items.toMutableList()
-//        val item = updatedItems.removeAt(from.index)
-//        updatedItems.add(to.index, item)
-//        onItemsChanged(updatedItems)
-//    })
-    val lazyListState = rememberLazyListState()
-    val state = rememberReorderableLazyListState(lazyListState) { from, to ->
-        items.add(to.index, items.removeAt(from.index))
-        onItemsChanged(items)
-    }
-
-    LazyColumn(
-        state = lazyListState,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.fillMaxSize()
-    ) {
-        itemsIndexed(items, key = null) { index, item ->
-            ReorderableItem(state = state, key = { items.indexOf(item) }) {
-                val interactionSource = remember { MutableInteractionSource() }
-                val elevation = animateDpAsState(if (it) 16.dp else 0.dp)
-                Card(
-                    onClick = {},
-                    interactionSource = interactionSource,
-                    modifier = Modifier.semantics {
-                        customActions = listOf(
-                            CustomAccessibilityAction(
-                                label = "Move Up",
-                                action = {
-                                    if (index > 0) {
-                                        items.apply { add(index - 1, removeAt(index)) }
-                                        onItemsChanged(items)
-                                        true
-                                    } else {
-                                        false
-                                    }
-                                }
-                            ),
-                            CustomAccessibilityAction(
-                                label = "Move Down",
-                                action = {
-                                    if (index < items.size - 1) {
-                                        items.apply {
-                                            add(index + 1, removeAt(index))
-                                        }
-                                        onItemsChanged(items)
-                                        true
-                                    } else {
-                                        false
-                                    }
-                                }
-                            ),
-                        )
-                    }
-                ) {
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Start,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                            .shadow(elevation.value)
-
-                    ) {
-                        IconButton(
-                            onClick = { },
-                            modifier = Modifier
-                                .wrapContentSize()
-                                .draggableHandle(interactionSource = interactionSource)
-                                .size(24.dp)
-                                .clearAndSetSemantics { }
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ljw_baseline_drag_indicator_96),
-                                contentDescription = "Drag Handle",
-                                modifier = Modifier
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        afterIcon(item = item)
-                    }
-                }
-            }
-
-        }
-    }
-}
-
 
 @Composable
 private fun afterIcon(item: drawer_item) {
