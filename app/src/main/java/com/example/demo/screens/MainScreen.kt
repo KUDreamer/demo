@@ -1,5 +1,6 @@
 package com.example.demo.screens
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Create
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,16 +37,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.StrokeCap.Companion.Butt
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.demo.ApiService
+import com.example.demo.RetrofitClient
 import com.example.demo.Routes
 import com.example.demo.Timeline
+import com.example.demo.fetchNearPlace
+import com.example.demo.fetchPlaceFromQuery
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import kotlin.math.absoluteValue
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,6 +78,30 @@ fun MainScreen(navController: NavHostController, trip: Trip) {
                             fontSize = 32.sp,
                             fontWeight = FontWeight(800)
                         )
+
+
+
+                        // TODO: 지우기
+                        Button(onClick = {
+                            fetchPlaceFromQuery("Starbucks")
+//                            val call = RetrofitClient.apiService.getNearPlace("감자탕")
+//                            call.enqueue(object: Callback<String> {
+//                                override fun onResponse(call: Call<String>, response: Response<String>) {
+//                                    if(response.isSuccessful) {
+//                                        Log.d("testtest", response.body().toString())
+//                                    }
+//                                    else {
+//                                        Log.e("API_CALL", "Response not successful: ${response.code()}")
+//                                    }
+//                                }
+//
+//                                override fun onFailure(p0: Call<String>, p1: Throwable) {
+//                                    Log.e("API_CALL", "Error: ${p1.message}")
+//                                }
+//                            })
+                        }) {
+                            Text("server")
+                        }
                     }
                 },
                 navigationIcon = {
