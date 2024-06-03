@@ -3,36 +3,36 @@ package com.example.demo.db
 import java.time.LocalDate
 
 class Repository(private val db:TripDatabase){
-    val tripDao = db.tripDao()
-    val dayDao = db.dayDao()
-    val placeDao = db.placeDao()
+    private val tripDao = db.tripDao()
+    private val dayDao = db.dayDao()
+    private val placeDao = db.placeDao()
 
-    suspend fun InsertTrip(trip: Trip){
-        tripDao.InsertTrip(trip)
+    suspend fun insertTrip(trip: Trip){
+        tripDao.insertTrip(trip)
     }
-    suspend fun UpdateTrip(trip: Trip){
-        tripDao.UpdateTrip(trip)
+    suspend fun updateTrip(trip: Trip){
+        tripDao.updateTrip(trip)
     }
-    suspend fun DeleteTrip(trip: Trip){
-        tripDao.DeleteTrip(trip)
+    suspend fun deleteTrip(trip: Trip){
+        tripDao.deleteTrip(trip)
     }
-    suspend fun InsertDay(day: Day){
-        dayDao.InsertDay(day)
+    suspend fun insertDay(day: Day){
+        dayDao.insertDay(day)
     }
-    suspend fun UpdateDay(day: Day){
-        dayDao.UpdateDay(day)
+    suspend fun updateDay(day: Day){
+        dayDao.updateDay(day)
     }
-    suspend fun DeleteDay(day: Day){
-        dayDao.DeleteDay(day)
+    suspend fun deleteDay(day: Day){
+        dayDao.deleteDay(day)
     }
-    suspend fun InsertPlace(place: Place){
-        placeDao.InsertPlace(place)
+    suspend fun insertPlace(place: Place){
+        placeDao.insertPlace(place)
     }
-    suspend fun UpdatePlace(place: Place){
-        placeDao.UpdatePlace(place)
+    suspend fun updatePlace(place: Place){
+        placeDao.updatePlace(place)
     }
-    suspend fun DeletePlace(place: Place){
-        placeDao.DeletePlace(place)
+    suspend fun deletePlace(place: Place){
+        placeDao.deletePlace(place)
     }
 
     fun getAllTrips() = tripDao.getAllTrips()
@@ -41,11 +41,9 @@ class Repository(private val db:TripDatabase){
         return dayDao.getDate(date)
     }
 
-    suspend fun getTripById(tripId: Int): Trip? {
-        return tripDao.getTripById(tripId)
-    }
+    fun getTripByDate(date: LocalDate) = tripDao.getTripByDate(date)
 
-    suspend fun getTripIdByDate(date: LocalDate): Int? {
-        return tripDao.getTripIdByDate(date)
-    }
+    fun getDaysByTripId(tripId: Int) = dayDao.getDaysByTripId(tripId)
+
+    fun getPlacesByDayId(dayId: Int) = placeDao.getPlacesByDayId(dayId)
 }

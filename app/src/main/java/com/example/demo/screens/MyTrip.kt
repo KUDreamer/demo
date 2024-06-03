@@ -47,6 +47,7 @@ import com.example.demo.R
 import com.example.demo.Routes
 import com.example.demo.db.Trip
 import com.example.demo.db.TripViewModel
+import java.time.format.DateTimeFormatter
 import kotlin.random.Random
 
 val colorPalette = listOf(
@@ -121,7 +122,7 @@ fun MyTrip(navController: NavHostController, tripViewModel: TripViewModel) {
             TripList(
                 list = tripList,
                 onClick = {
-                    tripViewModel.selectItem(it)
+                    tripViewModel.selectTrip(it)
                 },
                 navController = navController,
                 tripViewModel = tripViewModel)
@@ -176,8 +177,11 @@ fun TripItem(trip: Trip, onClick: (trip: Trip)-> Unit, navController: NavHostCon
                     fontWeight = FontWeight(700)
                 )
                 Text(
-//                    text = "${getTripDateRange(trip)}",
-                    text = "${trip.startDate} - ${trip.endDate}",
+                    text = "${trip.startDate.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))} - ${
+                        trip.endDate.format(
+                            DateTimeFormatter.ofPattern("yyyy/MM/dd")
+                        )
+                    }",
                     fontSize = 12.sp,
                     fontWeight = FontWeight(400)
                 )
@@ -233,7 +237,7 @@ fun TripItem(trip: Trip, onClick: (trip: Trip)-> Unit, navController: NavHostCon
                             )
                         }
                     },
-                    onClick = { tripViewModel.DeleteTrip(trip) }
+                    onClick = { tripViewModel.deleteTrip(trip) }
                 )
             }
             Spacer(modifier = Modifier.width(15.dp))

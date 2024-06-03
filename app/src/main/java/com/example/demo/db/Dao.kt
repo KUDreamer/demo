@@ -3,61 +3,59 @@ package com.example.demo.db
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Transaction
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
 @Dao
 interface TripDao {
-    @Insert
-    suspend fun InsertTrip(trip: Trip)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertTrip(trip: Trip)
 
     @Update
-    suspend fun UpdateTrip(trip: Trip)
+    suspend fun updateTrip(trip: Trip)
 
     @Delete
-    suspend fun DeleteTrip(trip: Trip)
+    suspend fun deleteTrip(trip: Trip)
 
-    @Transaction
     @Query("SELECT * FROM Trips")
     fun getAllTrips(): Flow<List<Trip>>
 
-    @Query("SELECT * FROM Trips WHERE id = :tripId")
-    suspend fun getTripById(tripId: Int): Trip?
-
-    @Query("SELECT id FROM Trips WHERE startDate <= :date AND endDate >= :date LIMIT 1")
-    suspend fun getTripIdByDate(date: LocalDate): Int?
+    @Query("SELECT * FROM Trips WHERE :date BETWEEN startDate AND endDate")
+    fun getTripByDate(date: LocalDate): Trip?
 }
 
 @Dao
 interface DayDao {
-    @Insert
-    suspend fun InsertDay(day: Day)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertDay(day: Day)
 
     @Update
-    suspend fun UpdateDay(day: Day)
+    suspend fun updateDay(day: Day)
 
     @Delete
-    suspend fun DeleteDay(day: Day)
+    suspend fun deleteDay(day: Day)
 
     @Query("SELECT * FROM Days WHERE date = :date LIMIT 1")
     suspend fun getDate(date: LocalDate): Day?
+
+    @Query("SELECT * FROM Days WHERE tripId = :tripId")
+    fun getDaysByTripId(tripId: Int): Flow<List<Day>>
 }
 
 @Dao
 interface PlaceDao {
-    @Insert
-    suspend fun InsertPlace(place: Place)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertPlace(place: Place)
 
     @Update
-    suspend fun UpdatePlace(place: Place)
+    suspend fun updatePlace(place: Place)
 
     @Delete
-    suspend fun DeletePlace(place: Place)
+    suspend fun deletePlace(place: Place)
 
-//    @Transaction
-//    @Query("SELECT * FROM Places WHERE dayId = :dayId")
-//    suspend fun getPlacesByDayId(dayId: Int): List<Place>
+    @Query("SELECT * FROM Places WHERE dayId = :dayId")
+    fun getPlacesByDayId(dayId: Int): Flow<List<Place>>
 }

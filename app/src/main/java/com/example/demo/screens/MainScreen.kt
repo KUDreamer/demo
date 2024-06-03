@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.demo.Routes
 import com.example.demo.Timeline
+import com.example.demo.db.Place
 import com.example.demo.db.Trip
 import com.example.demo.db.TripViewModel
 import java.time.LocalDate
@@ -55,13 +56,29 @@ fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel) {
 
 //    val currentDate = LocalDate.now()
     val currentDate = LocalDate.of(2024, 6, 20)
-    val selectedTrip = tripViewModel.selectedTrip.value
+    val selectedTrip by remember { tripViewModel.selectedTrip }
 
-//    val currentTrip = if (selectedTrip != null) {
-//        selectedTrip
-//    } else {
-//        val tripId = tripViewModel.getTripIdByDate(currentDate)
-//        tripViewModel.getTripById(tripId!!)
+    val currentDays by tripViewModel.currentDays.collectAsState()
+
+    var currentTrip by remember { mutableStateOf<Trip?>(null) }
+//    var currentDays by remember { mutableStateOf<List<Day>>(emptyList()) }
+    var currentPlaces by remember { mutableStateOf<Map<Int, List<Place>>>(emptyMap()) }
+
+//    LaunchedEffect(selectedTrip) {
+//        val trip = selectedTrip ?: tripViewModel.getTripByDate(currentDate)
+//        currentTrip = trip ?: throw IllegalStateException("No trip found for the date")
+//
+//        currentTrip?.let { trip ->
+//            val days = tripViewModel.getDaysByTripId(trip.id)
+//            currentDays = days
+//
+//            val placesMap = mutableMapOf<Int, List<Place>>()
+//            days.forEach { day ->
+//                val places = tripViewModel.getPlacesByDayId(day.id)
+//                placesMap[day.id] = places
+//            }
+//            currentPlaces = placesMap
+//        }
 //    }
 
     val scrollState = rememberScrollState()
@@ -75,11 +92,13 @@ fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel) {
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = currentTrip.title,
-                            fontSize = 32.sp,
-                            fontWeight = FontWeight(800)
-                        )
+                        currentTrip?.let {
+                            Text(
+                                text = it.title,
+                                fontSize = 32.sp,
+                                fontWeight = FontWeight(800)
+                            )
+                        }
                     }
                 },
                 navigationIcon = {
@@ -109,7 +128,7 @@ fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel) {
             .verticalScroll(scrollState)
         ) {
             Spacer(modifier = Modifier.height(24.dp))
-            trip.days.forEach { day ->
+            currentDays.forEach { day ->
                 var expanded by remember { mutableStateOf(false) }
                 val daysDifference = ChronoUnit.DAYS.between(currentDate, day.date)
                 val dDayText = when {
@@ -167,14 +186,11 @@ fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel) {
                 }
 
                 if (expanded) {
-                    Timeline(day.places)
+                    currentPlaces[day.id]?.let { places ->
+                        Timeline(places)
+                    }
                 }
             }
         }
     }
-}
-
-@Composable
-fun DayUnit() {
-
 }
