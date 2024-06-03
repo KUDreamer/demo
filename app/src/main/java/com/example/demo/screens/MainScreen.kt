@@ -29,6 +29,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,6 +42,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.demo.Routes
 import com.example.demo.Timeline
+import com.example.demo.db.Trip
+import com.example.demo.db.TripViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -48,9 +51,18 @@ import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(navController: NavHostController, trip: Trip) {
+fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel) {
 
+//    val currentDate = LocalDate.now()
     val currentDate = LocalDate.of(2024, 6, 20)
+    val selectedTrip = tripViewModel.selectedTrip.value
+
+//    val currentTrip = if (selectedTrip != null) {
+//        selectedTrip
+//    } else {
+//        val tripId = tripViewModel.getTripIdByDate(currentDate)
+//        tripViewModel.getTripById(tripId!!)
+//    }
 
     val scrollState = rememberScrollState()
 
@@ -64,7 +76,7 @@ fun MainScreen(navController: NavHostController, trip: Trip) {
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = trip.title,
+                            text = currentTrip.title,
                             fontSize = 32.sp,
                             fontWeight = FontWeight(800)
                         )
@@ -80,7 +92,7 @@ fun MainScreen(navController: NavHostController, trip: Trip) {
                     }
                 },
                 actions = {
-                    IconButton(onClick = {  }) {
+                    IconButton(onClick = { navController.navigate(Routes.AddSchedule.route) }) {
                         Icon(
                             imageVector = Icons.Outlined.Create,
                             contentDescription = "edit",

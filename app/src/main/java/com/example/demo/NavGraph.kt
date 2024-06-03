@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModelStoreOwner
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.demo.db.TripViewModel
 import com.example.demo.screens.AddSchedule
 import com.example.demo.screens.Date
 import com.example.demo.screens.DetailedRestaurant
@@ -39,20 +40,14 @@ val LocalNavGraphViewModelStoreOwner =
     }
 
 @Composable
-fun NavGraph(navController: NavHostController, navViewModel: NavViewModel) {
-
-    val startScreen = if (navViewModel.HasSchedule) {
-        Routes.MainScreen.route
-    } else {
-        Routes.MyTrip.route
-    }
+fun NavGraph(navController: NavHostController, navViewModel: NavViewModel, tripViewModel: TripViewModel) {
 
     val navStoreOwner = rememberViewModelStoreOwner()
 
     CompositionLocalProvider(
         LocalNavGraphViewModelStoreOwner provides navStoreOwner
     ) {
-        NavHost(navController = navController, startDestination = startScreen) {
+        NavHost(navController = navController, startDestination = tripViewModel.startScreen) {
             composable(route = Routes.AddSchedule.route) {
                 AddSchedule(navController)
             }
@@ -66,11 +61,11 @@ fun NavGraph(navController: NavHostController, navViewModel: NavViewModel) {
             }
 
             composable(route = Routes.MainScreen.route) {
-                MainScreen(navController)
+                MainScreen(navController, tripViewModel)
             }
 
             composable(route = Routes.MyTrip.route) {
-                MyTrip(navController)
+                MyTrip(navController, tripViewModel)
             }
 
             composable(route = Routes.NewTrip.route) {
