@@ -56,13 +56,15 @@ import kotlin.math.absoluteValue
 fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel) {
 
     val currentDate = LocalDate.now()
-    val selectedTrip by remember { tripViewModel.selectedTrip }
 
+    val selectedTrip by remember { tripViewModel.selectedTrip }
+    val trip by tripViewModel.currentTrip.collectAsState()
+    val currentTrip = trip ?: selectedTrip
     val currentDays by tripViewModel.currentDays.collectAsState()
     val currentPlaces by tripViewModel.currentPlaces.collectAsState()
 
-    LaunchedEffect(selectedTrip) {
-        selectedTrip?.let { tripViewModel.getDaysByTripId(it.id) }
+    LaunchedEffect(currentTrip) {
+        currentTrip?.let { tripViewModel.getDaysByTripId(it.id) }
         tripViewModel.getPlacesByDayId(currentDays)
     }
     Log.d("test", currentDays.toString())
@@ -79,7 +81,7 @@ fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel) {
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
-                        selectedTrip?.let {
+                        currentTrip?.let {
                             Text(
                                 text = it.title,
                                 fontSize = 32.sp,
@@ -116,7 +118,6 @@ fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel) {
         ) {
             Spacer(modifier = Modifier.height(24.dp))
             currentDays.forEach { day ->
-                var expanded by remember { mutableStateOf(false) }
                 val daysDifference = ChronoUnit.DAYS.between(currentDate, day.date)
                 val dDayText = when {
                     daysDifference == 0L -> "D-Day"
@@ -129,6 +130,8 @@ fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel) {
                     2L -> colorPalette[3]
                     else -> colorPalette[4]
                 }
+
+                var expanded by remember { mutableStateOf(daysDifference == 0L) }
 
                 Row(
                     modifier = Modifier
@@ -171,7 +174,6 @@ fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel) {
                     )
                     Spacer(modifier = Modifier.width(20.dp))
                 }
-
                 if (expanded) {
                     currentPlaces[day.id]?.let { places ->
                         Timeline(places)

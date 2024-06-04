@@ -37,10 +37,6 @@ class Repository(private val db:TripDatabase){
 
     fun getAllTrips() = tripDao.getAllTrips()
 
-    suspend fun getDate(date: LocalDate): Day? {
-        return dayDao.getDate(date)
-    }
-
     fun getTripByDate(date: LocalDate) = tripDao.getTripByDate(date)
 
     fun getDaysByTripId(tripId: Int) = dayDao.getDaysByTripId(tripId)

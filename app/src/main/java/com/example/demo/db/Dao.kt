@@ -38,9 +38,6 @@ interface DayDao {
     @Delete
     suspend fun deleteDay(day: Day)
 
-    @Query("SELECT * FROM Days WHERE date = :date LIMIT 1")
-    suspend fun getDate(date: LocalDate): Day?
-
     @Query("SELECT * FROM Days WHERE tripId = :tripId")
     fun getDaysByTripId(tripId: Int): Flow<List<Day>>
 }

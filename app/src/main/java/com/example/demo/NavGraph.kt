@@ -2,6 +2,8 @@ package com.example.demo
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
@@ -44,10 +46,18 @@ fun NavGraph(navController: NavHostController, navViewModel: NavViewModel, tripV
 
     val navStoreOwner = rememberViewModelStoreOwner()
 
+    val trip by tripViewModel.currentTrip.collectAsState()
+
+    val startScreen = if (trip != null) {
+        Routes.MainScreen.route
+    } else {
+        Routes.MyTrip.route
+    }
+
     CompositionLocalProvider(
         LocalNavGraphViewModelStoreOwner provides navStoreOwner
     ) {
-        NavHost(navController = navController, startDestination = tripViewModel.startScreen) {
+        NavHost(navController = navController, startDestination = startScreen) {
             composable(route = Routes.AddSchedule.route) {
                 AddSchedule(navController)
             }

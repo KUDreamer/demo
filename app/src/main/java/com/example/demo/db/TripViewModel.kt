@@ -1,12 +1,13 @@
 package com.example.demo.db
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.demo.Routes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -34,22 +35,17 @@ class TripViewModel (private val repository: Repository) : ViewModel(){
     private var _currentPlaces = MutableStateFlow<Map<Int, List<Place>>>(emptyMap())
     val currentPlaces = _currentPlaces.asStateFlow()
 
-    // 수정 필요
-    val currentTrip:Trip? = null
+    private val _currentTrip = MutableStateFlow<Trip?>(null)
+    val currentTrip: StateFlow<Trip?> = _currentTrip
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
-//            val currentDate = LocalDate.now()
-            val currentDate = LocalDate.of(2024, 6, 20)
-            val currentTrip = getTripByDate(currentDate)
-//            Log.d("시작", currentTrip.toString())
-        }
-    }
+            val currentDate = LocalDate.now()
+            val trip = repository.getTripByDate(currentDate)
+            Log.d("시작", trip.toString())
 
-    val startScreen = if (currentTrip != null) {
-        Routes.MainScreen.route
-    } else {
-        Routes.MyTrip.route
+            _currentTrip.value = trip
+        }
     }
 
     fun selectTrip(trip: Trip?) {
@@ -117,10 +113,6 @@ class TripViewModel (private val repository: Repository) : ViewModel(){
                 _tripList.value = it
             }
         }
-    }
-
-    suspend fun getDate(date: LocalDate): Day? {
-        return repository.getDate(date)
     }
 
     suspend fun getTripByDate(date: LocalDate): Trip? {
