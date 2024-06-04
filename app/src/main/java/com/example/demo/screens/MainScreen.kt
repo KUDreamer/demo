@@ -1,5 +1,6 @@
 package com.example.demo.screens
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +30,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,7 +43,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.demo.Routes
+import com.example.demo.Timeline
 import com.example.demo.db.TripViewModel
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -51,30 +55,18 @@ import kotlin.math.absoluteValue
 @Composable
 fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel) {
 
-//    val currentDate = LocalDate.now()
-    val currentDate = LocalDate.of(2024, 6, 20)
+    val currentDate = LocalDate.now()
     val selectedTrip by remember { tripViewModel.selectedTrip }
 
     val currentDays by tripViewModel.currentDays.collectAsState()
     val currentPlaces by tripViewModel.currentPlaces.collectAsState()
 
-//    var currentTrip by remember { mutableStateOf<Trip?>(null) }
-//    var currentDays by remember { mutableStateOf<List<Day>>(emptyList()) }
-//    var currentPlaces by remember { mutableStateOf<Map<Int, List<Place>>>(emptyMap()) }
-
-//    LaunchedEffect(selectedTrip) {
-//        selectedTrip?.let { trip ->
-//            val days = tripViewModel.getDaysByTripId(trip.id)
-//            currentDays = days
-//
-//            val placesMap = mutableMapOf<Int, List<Place>>()
-//            days.forEach { day ->
-//                val places = tripViewModel.getPlacesByDayId(day.id)
-//                placesMap[day.id] = places
-//            }
-//            currentPlaces = placesMap
-//        }
-//    }
+    LaunchedEffect(selectedTrip) {
+        selectedTrip?.let { tripViewModel.getDaysByTripId(it.id) }
+        tripViewModel.getPlacesByDayId(currentDays)
+    }
+    Log.d("test", currentDays.toString())
+    Log.d("test", currentPlaces.toString())
 
     val scrollState = rememberScrollState()
 
@@ -165,7 +157,7 @@ fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel) {
                     }
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        text = day.date.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")),
+                        text = day.date.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + " (${getDayOfWeekKor(day.dayOfWeek)})",
                         fontSize = 28.sp,
                         fontWeight = FontWeight(500)
                     )
@@ -181,11 +173,16 @@ fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel) {
                 }
 
                 if (expanded) {
-//                    currentPlaces[day.id]?.let { places ->
-//                        Timeline(places)
-//                    }
+                    currentPlaces[day.id]?.let { places ->
+                        Timeline(places)
+                    }
                 }
             }
         }
     }
+}
+
+fun getDayOfWeekKor(dayOfWeek: DayOfWeek): String {
+    val daysOfWeekInKorean = arrayOf("월", "화", "수", "목", "금", "토", "일")
+    return daysOfWeekInKorean[dayOfWeek.value - 1]
 }

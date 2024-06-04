@@ -1,6 +1,5 @@
 package com.example.demo.db
 
-import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -32,7 +31,7 @@ class TripViewModel (private val repository: Repository) : ViewModel(){
     private var _currentDays = MutableStateFlow<List<Day>>(emptyList())
     val currentDays = _currentDays.asStateFlow()
 
-    private var _currentPlaces = MutableStateFlow<List<Place>>(emptyList())
+    private var _currentPlaces = MutableStateFlow<Map<Int, List<Place>>>(emptyMap())
     val currentPlaces = _currentPlaces.asStateFlow()
 
     // 수정 필요
@@ -43,7 +42,7 @@ class TripViewModel (private val repository: Repository) : ViewModel(){
 //            val currentDate = LocalDate.now()
             val currentDate = LocalDate.of(2024, 6, 20)
             val currentTrip = getTripByDate(currentDate)
-            Log.d("시작", currentTrip.toString())
+//            Log.d("시작", currentTrip.toString())
         }
     }
 
@@ -66,6 +65,7 @@ class TripViewModel (private val repository: Repository) : ViewModel(){
     fun updateTrip(trip: Trip){
         viewModelScope.launch {
             repository.updateTrip(trip)
+            getAllTrips()
         }
     }
     fun deleteTrip(trip: Trip){
@@ -83,11 +83,13 @@ class TripViewModel (private val repository: Repository) : ViewModel(){
     fun updateDay(day: Day){
         viewModelScope.launch {
             repository.updateDay(day)
+            getAllTrips()
         }
     }
     fun deleteDay(day: Day){
         viewModelScope.launch {
             repository.deleteDay(day)
+            getAllTrips()
         }
     }
     fun insertPlace(place: Place){
@@ -99,11 +101,13 @@ class TripViewModel (private val repository: Repository) : ViewModel(){
     fun updatePlace(place: Place){
         viewModelScope.launch {
             repository.updatePlace(place)
+            getAllTrips()
         }
     }
     fun deletePlace(place: Place){
         viewModelScope.launch {
             repository.deletePlace(place)
+            getAllTrips()
         }
     }
 
@@ -119,41 +123,31 @@ class TripViewModel (private val repository: Repository) : ViewModel(){
         return repository.getDate(date)
     }
 
-//    fun getTripById(tripId: Int){
-//        viewModelScope.launch {
-//            repository.getTripById(tripId)
-//        }
-//    }
-//
-//    fun getTripIdByDate(date: LocalDate){
-//        viewModelScope.launch {
-//            repository.getTripIdByDate(date)
-//        }
-//    }
-
     suspend fun getTripByDate(date: LocalDate): Trip? {
         return withContext(Dispatchers.IO) {
             repository.getTripByDate(date)
         }
     }
 
-    //    suspend fun getDaysByTripId(tripId: Int): List<Day> {
-//        return withContext(Dispatchers.IO) {
-//            repository.getDaysByTripId(tripId)
-//        }
-//    }
     fun getDaysByTripId(tripId: Int) {
         viewModelScope.launch {
             repository.getDaysByTripId(tripId).collect {
                 _currentDays.value = it
+                getPlacesByDayId(it)
             }
         }
     }
 
-    fun getPlacesByDayId(dayId: Int) {
+    fun getPlacesByDayId(days: List<Day>) {
         viewModelScope.launch {
-            repository.getPlacesByDayId(dayId).collect {
-                _currentPlaces.value = it
+            days.forEach { day ->
+                launch {
+                    repository.getPlacesByDayId(day.id).collect { places ->
+                        _currentPlaces.value = _currentPlaces.value.toMutableMap().apply {
+                            put(day.id, places)
+                        }
+                    }
+                }
             }
         }
     }

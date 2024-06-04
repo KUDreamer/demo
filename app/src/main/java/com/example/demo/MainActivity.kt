@@ -50,16 +50,16 @@ fun SetProject() {
     val navController = rememberNavController()
 
     LaunchedEffect(Unit) {
-        tripViewModel.insertTrip(Trip(id = 1, title = "부산 여행", startDate = LocalDate.of(2024, 6, 19), endDate = LocalDate.of(2024, 6, 23)))
+        tripViewModel.insertTrip(Trip(id = 1, title = "부산 여행", startDate = LocalDate.of(2024, 6, 4), endDate = LocalDate.of(2024, 6, 8)))
         tripViewModel.insertTrip(Trip(id = 2, title = "엄마랑 강릉 여행", startDate = LocalDate.of(2024, 9, 30), endDate = LocalDate.of(2024, 9, 30)))
         tripViewModel.insertTrip(Trip(id = 3, title = "제주도 힐링 여행", startDate = LocalDate.of(2024, 12, 11), endDate = LocalDate.of(2024, 12, 12)))
 
 
-        tripViewModel.insertDay(Day(id = 1, tripId = 1, date = LocalDate.of(2024, 6, 19), dayOfWeek = LocalDate.of(2024, 6, 19).dayOfWeek))
-        tripViewModel.insertDay(Day(id = 2, tripId = 1, date = LocalDate.of(2024, 6, 20), dayOfWeek = LocalDate.of(2024, 6, 20).dayOfWeek))
-        tripViewModel.insertDay(Day(id = 3, tripId = 1, date = LocalDate.of(2024, 6, 21), dayOfWeek = LocalDate.of(2024, 6, 21).dayOfWeek))
-        tripViewModel.insertDay(Day(id = 4, tripId = 1, date = LocalDate.of(2024, 6, 22), dayOfWeek = LocalDate.of(2024, 6, 22).dayOfWeek))
-        tripViewModel.insertDay(Day(id = 5, tripId = 1, date = LocalDate.of(2024, 6, 23), dayOfWeek = LocalDate.of(2024, 6, 23).dayOfWeek))
+        tripViewModel.insertDay(Day(id = 1, tripId = 1, date = LocalDate.of(2024, 6, 4), dayOfWeek = LocalDate.of(2024, 6, 4).dayOfWeek))
+        tripViewModel.insertDay(Day(id = 2, tripId = 1, date = LocalDate.of(2024, 6, 5), dayOfWeek = LocalDate.of(2024, 6, 5).dayOfWeek))
+        tripViewModel.insertDay(Day(id = 3, tripId = 1, date = LocalDate.of(2024, 6, 6), dayOfWeek = LocalDate.of(2024, 6, 6).dayOfWeek))
+        tripViewModel.insertDay(Day(id = 4, tripId = 1, date = LocalDate.of(2024, 6, 7), dayOfWeek = LocalDate.of(2024, 6, 7).dayOfWeek))
+        tripViewModel.insertDay(Day(id = 5, tripId = 1, date = LocalDate.of(2024, 6, 8), dayOfWeek = LocalDate.of(2024, 6, 8).dayOfWeek))
 
         tripViewModel.insertDay(Day(id = 6, tripId = 2, date = LocalDate.of(2024, 9, 30), dayOfWeek = LocalDate.of(2024, 9, 30).dayOfWeek))
 
@@ -89,7 +89,7 @@ fun SetProject() {
         tripViewModel.insertPlace(Place(id = 16, dayId = 5, name = "메가박스", time = "18:00"))
         tripViewModel.insertPlace(Place(id = 17, dayId = 5, name = "숙소"))
 
-        Log.d("TripViewModel", "Sample data inserted")
+        Log.d("sample data", "Sample data inserted")
     }
 
     NavGraph(navController, navViewModel, tripViewModel)
