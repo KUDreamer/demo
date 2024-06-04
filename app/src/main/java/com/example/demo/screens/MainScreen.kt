@@ -41,9 +41,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.demo.Routes
-import com.example.demo.Timeline
-import com.example.demo.db.Place
-import com.example.demo.db.Trip
 import com.example.demo.db.TripViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -59,16 +56,14 @@ fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel) {
     val selectedTrip by remember { tripViewModel.selectedTrip }
 
     val currentDays by tripViewModel.currentDays.collectAsState()
+    val currentPlaces by tripViewModel.currentPlaces.collectAsState()
 
-    var currentTrip by remember { mutableStateOf<Trip?>(null) }
+//    var currentTrip by remember { mutableStateOf<Trip?>(null) }
 //    var currentDays by remember { mutableStateOf<List<Day>>(emptyList()) }
-    var currentPlaces by remember { mutableStateOf<Map<Int, List<Place>>>(emptyMap()) }
+//    var currentPlaces by remember { mutableStateOf<Map<Int, List<Place>>>(emptyMap()) }
 
 //    LaunchedEffect(selectedTrip) {
-//        val trip = selectedTrip ?: tripViewModel.getTripByDate(currentDate)
-//        currentTrip = trip ?: throw IllegalStateException("No trip found for the date")
-//
-//        currentTrip?.let { trip ->
+//        selectedTrip?.let { trip ->
 //            val days = tripViewModel.getDaysByTripId(trip.id)
 //            currentDays = days
 //
@@ -92,7 +87,7 @@ fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel) {
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
-                        currentTrip?.let {
+                        selectedTrip?.let {
                             Text(
                                 text = it.title,
                                 fontSize = 32.sp,
@@ -186,9 +181,9 @@ fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel) {
                 }
 
                 if (expanded) {
-                    currentPlaces[day.id]?.let { places ->
-                        Timeline(places)
-                    }
+//                    currentPlaces[day.id]?.let { places ->
+//                        Timeline(places)
+//                    }
                 }
             }
         }

@@ -32,13 +32,29 @@ class TripViewModel (private val repository: Repository) : ViewModel(){
     private var _currentDays = MutableStateFlow<List<Day>>(emptyList())
     val currentDays = _currentDays.asStateFlow()
 
-    private var _startScreen: String = Routes.MyTrip.route
-    val startScreen: String
-        get() = _startScreen
+    private var _currentPlaces = MutableStateFlow<List<Place>>(emptyList())
+    val currentPlaces = _currentPlaces.asStateFlow()
+
+    // 수정 필요
+    val currentTrip:Trip? = null
+
+    init {
+        viewModelScope.launch(Dispatchers.IO) {
+//            val currentDate = LocalDate.now()
+            val currentDate = LocalDate.of(2024, 6, 20)
+            val currentTrip = getTripByDate(currentDate)
+            Log.d("시작", currentTrip.toString())
+        }
+    }
+
+    val startScreen = if (currentTrip != null) {
+        Routes.MainScreen.route
+    } else {
+        Routes.MyTrip.route
+    }
 
     fun selectTrip(trip: Trip?) {
         selectedTrip.value = trip
-        Log.d("SelectedTrip", selectedTrip.value.toString())
     }
 
     fun insertTrip(trip: Trip){
@@ -128,28 +144,17 @@ class TripViewModel (private val repository: Repository) : ViewModel(){
 //    }
     fun getDaysByTripId(tripId: Int) {
         viewModelScope.launch {
-            repository.getDaysByTripId(tripId).collect{
+            repository.getDaysByTripId(tripId).collect {
                 _currentDays.value = it
             }
         }
     }
 
-//    suspend fun getPlacesByDayId(dayId: Int): List<Place> {
-//        return withContext(Dispatchers.IO) {
-//            repository.getPlacesByDayId(dayId)
-//        }
-//    }
-
-    init {
-        viewModelScope.launch(Dispatchers.IO) {
-            val currentDate = LocalDate.now()
-            val day = getDate(currentDate)
-            _startScreen = if (day != null) {
-                Routes.MainScreen.route
-            } else {
-                Routes.MyTrip.route
+    fun getPlacesByDayId(dayId: Int) {
+        viewModelScope.launch {
+            repository.getPlacesByDayId(dayId).collect {
+                _currentPlaces.value = it
             }
         }
     }
-
 }
