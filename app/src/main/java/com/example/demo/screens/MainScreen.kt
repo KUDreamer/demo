@@ -46,7 +46,6 @@ import com.example.demo.ApiService
 import com.example.demo.RetrofitClient
 import com.example.demo.Routes
 import com.example.demo.Timeline
-import com.example.demo.fetchNearPlace
 import com.example.demo.fetchPlaceFromQuery
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -82,26 +81,7 @@ fun MainScreen(navController: NavHostController, trip: Trip) {
 
 
                         // TODO: 지우기
-                        Button(onClick = {
-                            fetchPlaceFromQuery("Starbucks")
-//                            val call = RetrofitClient.apiService.getNearPlace("감자탕")
-//                            call.enqueue(object: Callback<String> {
-//                                override fun onResponse(call: Call<String>, response: Response<String>) {
-//                                    if(response.isSuccessful) {
-//                                        Log.d("testtest", response.body().toString())
-//                                    }
-//                                    else {
-//                                        Log.e("API_CALL", "Response not successful: ${response.code()}")
-//                                    }
-//                                }
-//
-//                                override fun onFailure(p0: Call<String>, p1: Throwable) {
-//                                    Log.e("API_CALL", "Error: ${p1.message}")
-//                                }
-//                            })
-                        }) {
-                            Text("server")
-                        }
+
                     }
                 },
                 navigationIcon = {

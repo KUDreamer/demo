@@ -1,6 +1,7 @@
 package com.example.demo
 
 import android.util.Log
+import com.example.demo.screens.getReturn
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
@@ -122,8 +123,7 @@ fun fetchPlaceData(placeId: String):String? {
     return r
 }
 
-fun fetchPlaceFromQuery(query: String):String? {
-    var r:String? = null
+fun fetchPlaceFromQuery(query: String) {
     val call = RetrofitClient.apiService.getPlaceFromQuery(query)
     call.enqueue(object : Callback<Object> {
         override fun onResponse(call: Call<Object>, response: Response<Object>) {
@@ -131,7 +131,7 @@ fun fetchPlaceFromQuery(query: String):String? {
 //                val placeInfo = response.body()
 //                Log.d("API_CALL", "Place Info: ${placeInfo?.result?.name}")
                 Log.d("API_CALL", "Place Info: ${response.body()}")
-                r = response.body().toString()
+                getReturn(response.body().toString())
             } else {
                 Log.e("API_CALL", "Response not successful: ${response.code()}")
             }
@@ -141,7 +141,6 @@ fun fetchPlaceFromQuery(query: String):String? {
             Log.e("API_CALL", "Error: ${t.message}")
         }
     })
-    return r
 }
 
 fun fetchNearPlace(query: String):String? {

@@ -1,5 +1,6 @@
 package com.example.demo.screens
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -50,20 +52,75 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.rememberImagePainter
+import com.example.demo.Photo
 import com.example.demo.R
 import com.example.demo.Routes
+import com.example.demo.fetchPlaceFromQuery
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import org.json.JSONObject
 
 data class ListInfo(var name: String, var img: Int, var che: Boolean) {
 
 }
+////////////
+var returnValue:String? = null
+fun getReturn(output:String) {
+    returnValue = output
+}
+
+/////////////
+
+
 
 private fun respone_text(blocks: List<MutableState<ListInfo>>, searchText: String) {
-    blocks.forEach { block ->
-        // 여기에서 block의 'name'을 검색 텍스트와 비교하여 업데이트할 수 있습니다.
-        // 예시로는 단순 검색 로직을 사용합니다. 실제 조건은 요구 사항에 맞게 조정해야 합니다.
-        block.value = block.value.copy(che = block.value.name.contains(searchText, ignoreCase = true))
+    println("aaaaaaaaaaaaaaa")
+
+    fetchPlaceFromQuery(searchText)
+
+    var json_s = returnValue
+    println(json_s)
+    if(json_s == null) {
+        json_s = """{
+        "candidates": [{
+            "formatted_address": "대한민국 서울특별시 광진구 자양제3동 1",
+            "name": "타코벨 스타시티",
+            "photos": [{
+                "height": 2592.0,
+                "html_attributions": ["<a href=\"https://maps.google.com/maps/contrib/100376991195073872164\">Sean Heungsun Lim</a>"],
+                "photo_reference": "AUGGfZmI8hJEypyUy8_62oXgY83oWKEY3zGMMg2l-4X2kfINWAeL1xxskwDshpm0cRFI2Shm73AKbGp2-I-vRKOqoFHjWFlwKZ7uNyQqAAXy8VqNs9U-lA9koHkIvJyRHcMH8vDRUR2GKSF08Ml_CsX_Dsi-Hqkw5RUZCRxp5n4enBuXoDax",
+                "width": 4608.0
+            }],
+            "rating": 3.8
+        }],
+        "status": "OK"
+    }"""
     }
+    val jsonObject = JSONObject(json_s)
+    val candidates = jsonObject.getJSONArray("candidates")
+
+    for (i in 0 until candidates.length()) {
+        val candidate = candidates.getJSONObject(i)
+        val formattedAddress = candidate.getString("formatted_address")
+        val name = candidate.getString("name")
+        val rating = candidate.getDouble("rating")
+        val photos = candidate.getJSONArray("photos")
+        val photo = photos.getJSONObject(0)
+        val height = photo.getDouble("height")
+        val width = photo.getDouble("width")
+        val photoReference = photo.getString("photo_reference")
+        val htmlAttributions = photo.getJSONArray("html_attributions").getString(0)
+
+        println("Formatted Address: $formattedAddress")
+        println("Name: $name")
+        println("Rating: $rating")
+        println("Photo - Height: $height, Width: $width, Photo Reference: $photoReference")
+        println("HTML Attributions: $htmlAttributions")
+    }
+
+
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -225,7 +282,10 @@ private fun menu_box(blocks: List<MutableState<ListInfo>>,navController: NavHost
         }
     }
 }
-
+fun rand(start: Int, end: Int): Int {
+    require(start <= end) { "Illegal Argument" }
+    return (start..end).random()
+}
 
 
 
@@ -233,6 +293,12 @@ private fun menu_box(blocks: List<MutableState<ListInfo>>,navController: NavHost
 fun RestaurantList(navController: NavHostController) {
     // 초기 데이터 및 상태 정의
     val images = R.drawable.exres
+    val foods = listOf(
+        "피자", "스테이크", "파스타", "샐러드", "김밥", "라멘", "치킨", "햄버거", "샌드위치", "불고기",
+        "비빔밥", "초밥", "타코", "부리토", "두부", "죽", "김치찌개", "된장찌개", "갈비탕", "샤브샤브",
+        "팟타이", "커리", "피쉬 앤 칩스", "탕수육", "만두", "오향장육", "파에야", "라자냐", "에그 베네딕트", "라따뚜이"
+    )
+    val rraand=rand(0,foods.size)
     val blocks = remember {
         mutableStateListOf(
             mutableStateOf(ListInfo("1", images, false)),
@@ -245,12 +311,10 @@ fun RestaurantList(navController: NavHostController) {
             mutableStateOf(ListInfo("8", images, false)),
         )
     }
-    val foods = listOf(
-        "피자", "스테이크", "파스타", "샐러드", "김밥", "라멘", "치킨", "햄버거", "샌드위치", "불고기",
-        "비빔밥", "초밥", "타코", "부리토", "두부", "죽", "김치찌개", "된장찌개", "갈비탕", "샤브샤브",
-        "팟타이", "커리", "피쉬 앤 칩스", "탕수육", "만두", "오향장육", "파에야", "라자냐", "에그 베네딕트", "라따뚜이"
-    )
-    //respone_text(blocks,foods[2]) 처음에 여기 음식 랜덤으로 검색해서 block초기화
+
+    LaunchedEffect(key1 = Unit) {
+        respone_text(blocks,foods[rraand])
+    }
 
 
     // 체크된 항목의 수를 추적
