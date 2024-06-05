@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -19,6 +20,7 @@ import com.example.demo.screens.MainScreen
 import com.example.demo.screens.MyTrip
 import com.example.demo.screens.NewTrip
 import com.example.demo.screens.RestaurantList
+import com.example.demo.screens.detailedScheduleMain
 
 sealed class Routes(val route: String) {
     object AddSchedule : Routes("AddSchedule")
@@ -28,6 +30,7 @@ sealed class Routes(val route: String) {
     object MyTrip : Routes("MyTrip")
     object NewTrip : Routes("NewTrip")
     object RestaurantList : Routes("RestaurantList")
+    object DetailedSchedule : Routes("detailedScheduleMain")
 }
 
 @Composable
@@ -59,31 +62,35 @@ fun NavGraph(navController: NavHostController, navViewModel: NavViewModel, tripV
     ) {
         NavHost(navController = navController, startDestination = startScreen) {
             composable(route = Routes.AddSchedule.route) {
-                AddSchedule(navController)
+                AddSchedule(navController, navViewModel)
             }
 
             composable(route = Routes.Date.route) {
-                Date(navController)
+                Date(navController, navViewModel)
             }
 
             composable(route = Routes.DetailedRestaurant.route) {
-                DetailedRestaurant(navController)
+                DetailedRestaurant(navController, navViewModel)
             }
 
             composable(route = Routes.MainScreen.route) {
-                MainScreen(navController, tripViewModel)
+                MainScreen(navController, tripViewModel, navViewModel)
             }
 
             composable(route = Routes.MyTrip.route) {
-                MyTrip(navController, tripViewModel)
+                MyTrip(navController, tripViewModel, navViewModel)
             }
 
             composable(route = Routes.NewTrip.route) {
-                NewTrip(navController)
+                NewTrip(navController, navViewModel)
             }
 
             composable(route = Routes.RestaurantList.route) {
-                RestaurantList(navController)
+                RestaurantList(navController, navViewModel)
+            }
+
+            composable(route = Routes.DetailedSchedule.route) {
+                detailedScheduleMain(navController, navViewModel)
             }
         }
     }

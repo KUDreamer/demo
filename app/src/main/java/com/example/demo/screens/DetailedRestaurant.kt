@@ -1,10 +1,8 @@
 package com.example.demo.screens
 
-
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,13 +11,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.demo.ui.theme.DemoTheme
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,26 +25,18 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import coil.compose.AsyncImage
 import com.example.demo.R
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.example.demo.ui.theme.DemoTheme
 import org.json.JSONObject
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.TopAppBar
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import com.example.demo.NavViewModel
 import com.example.demo.Routes
-
-object Routes {
-    object AddSchedule : Route("add_schedule")
-    object Date : Route("date")
-    object DetailedRestaurant : Route("detailed_restaurant")
-    object MainScreen : Route("main_screen")
-    object MyTrip : Route("my_trip")
-    object NewTrip : Route("new_trip")
-    object RestaurantList : Route("restaurant_list")
-
-    open class Route(val route: String)
-}
 
 data class RestaurantData(
     val name: String,
@@ -63,15 +50,27 @@ data class RestaurantData(
     val imageUrl4: String,
     val operatingHoursText: String,
     val hasOperatingHours: Boolean,
-    val hashtags: List<String>
+    val hashtags: List<String>,
+    val address: String
 )
 
 @Composable
-fun DetailedRestaurant(navController: NavHostController) {
+fun DetailedRestaurant(navController: NavHostController, navViewModel: NavViewModel) {
     val restaurantData = fetchRestaurantData()
 
     DemoTheme {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            topBar = {
+                TopAppBar(
+                    title = { Text(text = "") },
+                    navigationIcon = {
+                        BackButton(navController = navController)
+                    },
+                    backgroundColor = Color.White
+                )
+            }
+        ) { innerPadding ->
             if (restaurantData != null) {
                 MainContent(
                     restaurantData = restaurantData,
@@ -81,6 +80,19 @@ fun DetailedRestaurant(navController: NavHostController) {
             }
         }
     }
+}
+
+@Composable
+fun BackButton(navController: NavHostController) {
+    Icon(
+        imageVector = Icons.Default.ArrowBack,
+        contentDescription = "Back",
+        modifier = Modifier
+            .padding(16.dp)
+            .clickable {
+                navController.popBackStack()
+            }
+    )
 }
 
 private fun fetchRestaurantData(): RestaurantData? {
@@ -97,7 +109,8 @@ private fun fetchRestaurantData(): RestaurantData? {
             "imageUrl4": "https://via.placeholder.com/85x200.png?text=Food+Image+4",
             "operatingHoursText": "평일\n09:00-13:00 브레이크 타임\n13:00 라스트 오더\n09:00-13:00 토요일\n09:00-13:00 일요일\n09:00-13:00 휴일\n09:00-13:00 그 외 쉬는날",
             "hasOperatingHours": true,
-            "hashtags": ["#냉면", "#마라마라", "#마라마라기"]
+            "hashtags": ["#냉면", "#마라마라", "#마라마라기"],
+            "address": "서울시 광진구 능동로 120"
         }
     """.trimIndent()
 
@@ -117,7 +130,8 @@ private fun fetchRestaurantData(): RestaurantData? {
             hasOperatingHours = jsonObject.getBoolean("hasOperatingHours"),
             hashtags = jsonObject.getJSONArray("hashtags").let { array ->
                 List(array.length()) { array.getString(it) }
-            }
+            },
+            address = jsonObject.getString("address")
         )
     } catch (e: Exception) {
         e.printStackTrace()
@@ -128,6 +142,7 @@ private fun fetchRestaurantData(): RestaurantData? {
 @Composable
 fun MainContent(restaurantData: RestaurantData, modifier: Modifier = Modifier, navController: NavHostController) {
     var isExpanded by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Box(modifier = modifier.fillMaxSize()) {
         LazyColumn(
@@ -359,12 +374,77 @@ fun MainContent(restaurantData: RestaurantData, modifier: Modifier = Modifier, n
                 }
             }
             item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.location_on), // 위치 아이콘
+                        contentDescription = "위치 아이콘",
+                        tint = Color.Black,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = restaurantData.address,
+                        fontSize = 14.sp,
+                        fontFamily = FontFamily(Font(R.font.pretandard_variable)),
+                        fontWeight = FontWeight.Normal,
+                        color = Color.Black,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .clickable {
+                                handleMapClick(
+                                    "https://www.google.com/maps/place/%EC%B0%B8%EB%A7%9B%EC%A7%91/data=!4m10!1m2!2m1!1z66eb7KeR!3m6!1s0x357ca38cd1268333:0x9b7d8a1cb4a868ca!8m2!3d37.5656544!4d126.9647906!15sCgbrp5vsp5FaCCIG66eb7KeRkgETYmFyYmVjdWVfcmVzdGF1cmFudJoBI0NoWkRTVWhOTUc5blMwVkpRMEZuU1VOcGNXVXRSMWhuRUFF4AEA!16s%2Fg%2F11hz5vqk8_?entry=ttu",
+                                    context
+                                )
+                            }
+                            .size(width = 102.dp, height = 30.dp) // 크기 조정
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.rectangle_62), // 배경 설정
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(end = 4.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.location_on), // 위치 아이콘 (필요한 경우 아이콘 리소스 변경)
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "지도보기",
+                                color = Color.Black,
+                                fontSize = 10.sp,
+                                fontFamily = FontFamily(Font(R.font.pretandard_variable)),
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                    }
+                }
+            }
+            item {
                 Spacer(modifier = Modifier.height(100.dp))
             }
         }
         Button(
             onClick = {
-                navController.navigate(Routes.MyTrip.route)
+                navController.navigate(Routes.Date.route)
             },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -424,7 +504,8 @@ fun DetailedRestaurantPreview() {
                 09:00-13:00 그 외 쉬는날
             """.trimIndent(),
             hasOperatingHours = true,
-            hashtags = listOf("#냉면", "#마라마라", "#마라마라기")
+            hashtags = listOf("#냉면", "#마라마라", "#마라마라기"),
+            address = "서울시 광진구 능동로 120"
         )
         MainContent(restaurantData = sampleData, navController = rememberNavController())
     }
@@ -432,4 +513,17 @@ fun DetailedRestaurantPreview() {
 
 fun handlePhoneClick(phoneNumber: String) {
     // TODO: 전화번호 클릭 이벤트 처리 로직 추가
+}
+
+fun handleMapClick(url: String, context: Context) {
+    // Create an intent using the provided URL
+    val mapIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+    mapIntent.setPackage("com.google.android.apps.maps")
+    if (mapIntent.resolveActivity(context.packageManager) != null) {
+        context.startActivity(mapIntent)
+    } else {
+        // If Google Maps app is not installed, open with web browser
+        val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        context.startActivity(webIntent)
+    }
 }

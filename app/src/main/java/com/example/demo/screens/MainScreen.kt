@@ -42,8 +42,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.demo.NavViewModel
 import com.example.demo.Routes
 import com.example.demo.Timeline
+import com.example.demo.fetchPlaceFromQuery
 import com.example.demo.db.TripViewModel
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -53,7 +55,7 @@ import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel) {
+fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel, navViewModel: NavViewModel) {
 
     val currentDate = LocalDate.now()
 
@@ -82,6 +84,7 @@ fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel) {
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
+
                         currentTrip?.let {
                             Text(
                                 text = it.title,
