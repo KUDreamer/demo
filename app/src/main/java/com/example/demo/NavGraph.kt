@@ -28,6 +28,7 @@ sealed class Routes(val route: String) {
     object MyTrip : Routes("MyTrip")
     object NewTrip : Routes("NewTrip")
     object RestaurantList : Routes("RestaurantList")
+    object DetailedSchedule : Routes("detailedScheduleMain")
 }
 
 @Composable
