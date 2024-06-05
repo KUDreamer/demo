@@ -43,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -74,7 +75,7 @@ fun MyTrip(navController: NavHostController, tripViewModel: TripViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-//                modifier = Modifier.padding(top = 60.dp),
+                modifier = Modifier.padding(vertical = 10.dp),
                 title = {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -199,11 +200,11 @@ fun TripItem(trip: Trip, onClick: (trip: Trip)-> Unit, navController: NavHostCon
             )
             DropdownMenu(
                 modifier = Modifier
-                    .background(Color(0xFFFFE4C9)),
-//                    .width(107.dp)
-//                    .height(131.dp),
+                    .background(Color(0xFFFFE4C9))
+                    .width(100.dp),
                 expanded = isDropDownMenuExpanded,
-                onDismissRequest = { isDropDownMenuExpanded = false }
+                onDismissRequest = { isDropDownMenuExpanded = false },
+                offset = DpOffset(270.dp, 0.dp)
             ) {
                 DropdownMenuItem(
                     text = {
@@ -211,7 +212,9 @@ fun TripItem(trip: Trip, onClick: (trip: Trip)-> Unit, navController: NavHostCon
                             Text(
                                 text = "편집",
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight(500)
+                                fontWeight = FontWeight(500),
+                                modifier = Modifier
+                                    .weight(1f)
                             )
                             Icon(
                                 Icons.Outlined.Edit,
@@ -295,7 +298,9 @@ fun SetDialogDropdown(tripViewModel: TripViewModel, trip: Trip) {
                 Text(
                     "삭제",
                     fontSize = 16.sp,
-                    fontWeight = FontWeight(500)
+                    fontWeight = FontWeight(500),
+                    modifier = Modifier
+                        .weight(1f)
                 )
                 Icon(
                     painter = painterResource(id = R.drawable.outline_delete_24),

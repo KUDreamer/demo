@@ -59,7 +59,7 @@ fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel) {
 
     val selectedTrip by remember { tripViewModel.selectedTrip }
     val trip by tripViewModel.currentTrip.collectAsState()
-    val currentTrip = trip ?: selectedTrip
+    val currentTrip = selectedTrip ?: trip
     val currentDays by tripViewModel.currentDays.collectAsState()
     val currentPlaces by tripViewModel.currentPlaces.collectAsState()
 
@@ -75,7 +75,8 @@ fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth()
+                    .padding(vertical = 10.dp),
                 title = {
                     Box(
                         modifier = Modifier.fillMaxWidth(),
@@ -116,7 +117,6 @@ fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel) {
             .padding(it)
             .verticalScroll(scrollState)
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
             currentDays.forEach { day ->
                 val daysDifference = ChronoUnit.DAYS.between(currentDate, day.date)
                 val dDayText = when {
