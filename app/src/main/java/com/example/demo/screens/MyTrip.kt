@@ -18,6 +18,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
@@ -221,24 +224,7 @@ fun TripItem(trip: Trip, onClick: (trip: Trip)-> Unit, navController: NavHostCon
                     onClick = { navController.navigate(Routes.AddSchedule.route) }
                 )
                 Divider(color = Color(0xFFFAA955))
-                DropdownMenuItem(
-                    text = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                "삭제",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight(500)
-                            )
-                            Icon(
-                                painter = painterResource(id = R.drawable.outline_delete_24),
-                                contentDescription = "delete",
-                                modifier = Modifier
-                                    .size(24.dp)
-                            )
-                        }
-                    },
-                    onClick = { tripViewModel.deleteTrip(trip) }
-                )
+                SetDialogDropdown(tripViewModel, trip)
             }
             Spacer(modifier = Modifier.width(15.dp))
         }
@@ -256,4 +242,68 @@ fun TripList(list: List<Trip>, onClick: (Trip)-> Unit, navController: NavHostCon
             TripItem(trip, onClick, navController, tripViewModel)
         }
     }
+}
+
+@Composable
+fun SetDialogDropdown(tripViewModel: TripViewModel, trip: Trip) {
+    var showDialog by remember { mutableStateOf(false) }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showDialog = false
+            },
+            title = {
+                Text(text = "삭제 확인")
+            },
+            text = {
+                Text("선택한 여행을 삭제하시겠습니까?")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        tripViewModel.deleteTrip(trip)
+                        showDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFF9730),
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text("삭제")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        showDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFF9730),
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text("취소")
+                }
+            }
+        )
+    }
+
+    DropdownMenuItem(
+        text = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "삭제",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight(500)
+                )
+                Icon(
+                    painter = painterResource(id = R.drawable.outline_delete_24),
+                    contentDescription = "delete",
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        },
+        onClick = { showDialog = true }
+    )
 }
