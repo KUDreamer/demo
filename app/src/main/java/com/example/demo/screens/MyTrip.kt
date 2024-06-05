@@ -30,6 +30,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,84 +45,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.demo.R
 import com.example.demo.Routes
-import java.time.LocalDate
+import com.example.demo.db.Trip
+import com.example.demo.db.TripViewModel
 import java.time.format.DateTimeFormatter
 import kotlin.random.Random
-
-data class Place(val name: String, val time: String?)
-data class Day(val date: LocalDate, val places: List<Place>)
-data class Trip(val title: String, val days: List<Day>)
-
-val tripList = listOf(
-    Trip(
-        title = "부산 여행",
-        days = listOf(
-            Day(date = LocalDate.of(2024, 6, 19), places = listOf(
-                Place(name = "영심이네 순두부찌개", time = null),
-                Place(name = "베이커리 카페", time = null),
-                Place(name = "메가박스", time = "18:00"),
-                Place(name = "숙소", time = null)
-            )),
-            Day(date = LocalDate.of(2024, 6, 20), places = listOf(
-                Place(name = "영심이네 순두부찌개", time = null),
-                Place(name = "스타벅스 **점", time = null),
-                Place(name = "공연", time = "16:00"),
-                Place(name = "숙소", time = null)
-            )),
-            Day(date = LocalDate.of(2024, 6, 21), places = listOf(
-                Place(name = "영심이네 순두부찌개", time = null),
-                Place(name = "해수욕장", time = null),
-                Place(name = "베이커리 카페", time = null),
-                Place(name = "메가박스", time = "18:00"),
-                Place(name = "숙소", time = null)
-            )),
-            Day(date = LocalDate.of(2024, 6, 22), places = listOf(
-                Place(name = "영심이네 순두부찌개", time = null),
-                Place(name = "베이커리 카페", time = null),
-                Place(name = "스타벅스 **점", time = null),
-                Place(name = "메가박스", time = "18:00"),
-                Place(name = "숙소", time = null)
-            )),
-            Day(date = LocalDate.of(2024, 6, 23), places = listOf(
-                Place(name = "영심이네 순두부찌개", time = null),
-                Place(name = "베이커리 카페", time = null),
-                Place(name = "스타벅스 **점", time = null),
-                Place(name = "메가박스", time = "18:00"),
-                Place(name = "숙소", time = null)
-            )),
-        )
-    ),
-    Trip(
-        title = "엄마랑 강릉 여행",
-        days = listOf(
-            Day(date = LocalDate.of(2024, 9, 30), places = listOf(
-                Place(name = "영심이네 순두부찌개", time = null),
-                Place(name = "베이커리 카페", time = null),
-                Place(name = "메가박스", time = "18:00"),
-                Place(name = "숙소", time = null)
-            ))
-        )
-    ),
-    Trip(
-        title = "제주도 힐링 여행",
-        days = listOf(
-            Day(date = LocalDate.of(2024, 12, 11), places = listOf(
-                Place(name = "영심이네 순두부찌개", time = null),
-                Place(name = "해수욕장", time = null),
-                Place(name = "베이커리 카페", time = null),
-                Place(name = "메가박스", time = "18:00"),
-                Place(name = "숙소", time = null)
-            )),
-            Day(date = LocalDate.of(2024, 12, 12), places = listOf(
-                Place(name = "영심이네 순두부찌개", time = null),
-                Place(name = "베이커리 카페", time = null),
-                Place(name = "스타벅스 **점", time = null),
-                Place(name = "메가박스", time = "18:00"),
-                Place(name = "숙소", time = null)
-            )),
-        )
-    )
-)
 
 val colorPalette = listOf(
     Color(0xFFFF9730),
@@ -137,7 +64,10 @@ fun getRandomColor(): Color {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyTrip(navController: NavHostController) {
+fun MyTrip(navController: NavHostController, tripViewModel: TripViewModel) {
+
+    val tripList by tripViewModel.tripList.collectAsState()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -184,20 +114,18 @@ fun MyTrip(navController: NavHostController) {
             )
         }
     ) {
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(it)) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-            ) {
-                items(tripList) { trip ->
-                    TripItem(trip = trip)
-//                    {
-//                        selectedTrip = trip
-//                    }
-                }
-            }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(it)
+        ) {
+            TripList(
+                list = tripList,
+                onClick = {
+                    tripViewModel.selectTrip(it)
+                },
+                navController = navController,
+                tripViewModel = tripViewModel)
             Row(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
@@ -211,23 +139,29 @@ fun MyTrip(navController: NavHostController) {
                     modifier = Modifier.size(32.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(text = "새로운 일정",
+                Text(
+                    text = "새로운 일정",
                     fontSize = 20.sp,
-                    fontWeight = FontWeight(700))
+                    fontWeight = FontWeight(700)
+                )
             }
         }
     }
 }
 
 @Composable
-fun TripItem(trip: Trip) {
+fun TripItem(trip: Trip, onClick: (trip: Trip)-> Unit, navController: NavHostController, tripViewModel: TripViewModel) {
     var isDropDownMenuExpanded by remember { mutableStateOf(false) }
-//    fun TripItem(trip: Trip, onClick: () -> Unit) {
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp)
-            .height(66.dp),
+            .height(66.dp)
+            .clickable {
+                onClick(trip)
+                navController.navigate(Routes.MainScreen.route)
+            },
         colors = CardDefaults.cardColors(containerColor = getRandomColor())
     ) {
         Row(
@@ -237,13 +171,20 @@ fun TripItem(trip: Trip) {
             Column(
                 modifier = Modifier.padding(start = 22.dp)
             ) {
-                Text(text = trip.title,
+                Text(
+                    text = trip.title,
                     fontSize = 20.sp,
                     fontWeight = FontWeight(700)
                 )
-                Text(text = "${getTripDateRange(trip)}",
+                Text(
+                    text = "${trip.startDate.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))} - ${
+                        trip.endDate.format(
+                            DateTimeFormatter.ofPattern("yyyy/MM/dd")
+                        )
+                    }",
                     fontSize = 12.sp,
-                    fontWeight = FontWeight(400))
+                    fontWeight = FontWeight(400)
+                )
             }
             Spacer(modifier = Modifier.weight(1f))
             Icon(
@@ -253,81 +194,66 @@ fun TripItem(trip: Trip) {
                     .size(36.dp)
                     .clickable { isDropDownMenuExpanded = true }
             )
-                DropdownMenu(
-                    modifier = Modifier
-                        .background(Color(0xFFFFE4C9)),
+            DropdownMenu(
+                modifier = Modifier
+                    .background(Color(0xFFFFE4C9)),
 //                    .width(107.dp)
 //                    .height(131.dp),
-                    expanded = isDropDownMenuExpanded,
-                    onDismissRequest = { isDropDownMenuExpanded = false }
-                ) {
-                    DropdownMenuItem(
-                        text = {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(text = "편집",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight(500))
-                                Icon(
-                                    Icons.Outlined.Edit,
-                                    contentDescription = "Edit",
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                )
-                            }
-                        },
-                        onClick = { }
-                    )
-                    Divider(color = Color(0xFFFAA955))
-                    DropdownMenuItem(
-                        text = {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("복사",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight(500))
-                                Icon(
-                                    painter = painterResource(id = R.drawable.baseline_content_copy_24),
-                                    contentDescription = "copy",
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                )
-                            }
-                        },
-                        onClick = { }
-                    )
-                    Divider(color = Color(0xFFFAA955))
-                    DropdownMenuItem(
-                        text = {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("삭제",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight(500))
-                                Icon(
-                                    painter = painterResource(id = R.drawable.outline_delete_24),
-                                    contentDescription = "delete",
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                )
-                            }
-                        },
-                        onClick = { }
-                    )
-                }
-
+                expanded = isDropDownMenuExpanded,
+                onDismissRequest = { isDropDownMenuExpanded = false }
+            ) {
+                DropdownMenuItem(
+                    text = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "편집",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight(500)
+                            )
+                            Icon(
+                                Icons.Outlined.Edit,
+                                contentDescription = "Edit",
+                                modifier = Modifier
+                                    .size(24.dp)
+                            )
+                        }
+                    },
+                    onClick = { navController.navigate(Routes.AddSchedule.route) }
+                )
+                Divider(color = Color(0xFFFAA955))
+                DropdownMenuItem(
+                    text = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                "삭제",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight(500)
+                            )
+                            Icon(
+                                painter = painterResource(id = R.drawable.outline_delete_24),
+                                contentDescription = "delete",
+                                modifier = Modifier
+                                    .size(24.dp)
+                            )
+                        }
+                    },
+                    onClick = { tripViewModel.deleteTrip(trip) }
+                )
+            }
             Spacer(modifier = Modifier.width(15.dp))
         }
     }
     Spacer(modifier = Modifier.height(12.dp))
 }
 
-fun getTripDateRange(trip: Trip): String? {
-    val days = trip.days
-    return when {
-//        days.isEmpty() -> null
-        days.size == 1 -> days[0].date.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
-        else -> {
-            val startDate = days[0].date.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) // Trip에 날짜별로 정렬되도록 해야 함
-            val endDate = days[days.size - 1].date.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
-            "$startDate - $endDate"
+@Composable
+fun TripList(list: List<Trip>, onClick: (Trip)-> Unit, navController: NavHostController, tripViewModel: TripViewModel) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        items(list) { trip ->
+            TripItem(trip, onClick, navController, tripViewModel)
         }
     }
 }
