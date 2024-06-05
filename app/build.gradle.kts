@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
+    kotlin("kapt")
 }
 
 android {
@@ -49,6 +50,11 @@ android {
     }
 }
 
+kapt {
+    correctErrorTypes = true
+}
+
+
 dependencies {
 
     implementation(libs.androidx.core.ktx)
@@ -60,6 +66,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
+    kapt(libs.androidx.room.compiler)
     implementation(libs.androidx.room.common)
     implementation(libs.androidx.room.ktx)
     implementation(libs.reorderable)
