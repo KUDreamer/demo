@@ -101,13 +101,15 @@ object RetrofitClient {
     val apiService: ApiService = retrofit.create(ApiService::class.java)
 }
 
-fun fetchPlaceData(placeId: String) {
+fun fetchPlaceData(placeId: String):String? {
+    var r:String? = null
     val call = RetrofitClient.apiService.getPlaceData(placeId)
     call.enqueue(object : Callback<Object> {
         override fun onResponse(call: Call<Object>, response: Response<Object>) {
             if (response.isSuccessful) {
                 val placeData = response.body()
                 Log.d("API_CALL", "Place Data: $placeData")
+                r = placeData?.toString()
             } else {
                 Log.e("API_CALL", "Response not successful: ${response.code()}")
             }
@@ -117,9 +119,11 @@ fun fetchPlaceData(placeId: String) {
             Log.e("API_CALL", "Error: ${t.message}")
         }
     })
+    return r
 }
 
-fun fetchPlaceFromQuery(query: String) {
+fun fetchPlaceFromQuery(query: String):String? {
+    var r:String? = null
     val call = RetrofitClient.apiService.getPlaceFromQuery(query)
     call.enqueue(object : Callback<Object> {
         override fun onResponse(call: Call<Object>, response: Response<Object>) {
@@ -127,6 +131,7 @@ fun fetchPlaceFromQuery(query: String) {
 //                val placeInfo = response.body()
 //                Log.d("API_CALL", "Place Info: ${placeInfo?.result?.name}")
                 Log.d("API_CALL", "Place Info: ${response.body()}")
+                r = response.body().toString()
             } else {
                 Log.e("API_CALL", "Response not successful: ${response.code()}")
             }
@@ -136,15 +141,18 @@ fun fetchPlaceFromQuery(query: String) {
             Log.e("API_CALL", "Error: ${t.message}")
         }
     })
+    return r
 }
 
-fun fetchNearPlace(query: String) {
+fun fetchNearPlace(query: String):String? {
+    var r:String? = null
     val call = RetrofitClient.apiService.getNearPlace(query)
     call.enqueue(object : Callback<Object> {
         override fun onResponse(call: Call<Object>, response: Response<Object>) {
             if (response.isSuccessful) {
                 val nearPlace = response.body()
                 Log.d("API_CALL", "Near Place: ${nearPlace}")
+                r = response.body().toString()
             } else {
                 Log.e("API_CALL", "Response not successful: ${response.code()}")
             }
@@ -154,9 +162,11 @@ fun fetchNearPlace(query: String) {
             Log.e("API_CALL", "Error: ${t.message}")
         }
     })
+    return r
 }
 
-fun fetchDirections(origin: String, destination: String) {
+fun fetchDirections(origin: String, destination: String):String? {
+    var r:String? = null
     val request = mapOf("origin" to origin, "destination" to destination)
     val call = RetrofitClient.apiService.getDirections(request)
     call.enqueue(object : Callback<Object> {
@@ -164,6 +174,7 @@ fun fetchDirections(origin: String, destination: String) {
             if (response.isSuccessful) {
                 val directions = response.body()
                 Log.d("API_CALL", "Directions: $directions")
+                r = response.body().toString()
             } else {
                 Log.e("API_CALL", "Response not successful: ${response.code()}")
             }
@@ -173,4 +184,5 @@ fun fetchDirections(origin: String, destination: String) {
             Log.e("API_CALL", "Error: ${t.message}")
         }
     })
+    return r
 }
