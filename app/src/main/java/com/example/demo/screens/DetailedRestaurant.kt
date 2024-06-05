@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import com.example.demo.NavViewModel
 import com.example.demo.Routes
 
 data class RestaurantData(
@@ -54,7 +55,7 @@ data class RestaurantData(
 )
 
 @Composable
-fun DetailedRestaurant(navController: NavHostController) {
+fun DetailedRestaurant(navController: NavHostController, navViewModel: NavViewModel) {
     val restaurantData = fetchRestaurantData()
 
     DemoTheme {

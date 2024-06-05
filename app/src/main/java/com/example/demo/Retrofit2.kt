@@ -1,7 +1,6 @@
 package com.example.demo
 
 import android.util.Log
-import com.example.demo.screens.getReturn
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
@@ -17,6 +16,9 @@ import retrofit2.http.FormUrlEncoded
 import retrofit2.http.POST
 import retrofit2.http.Field
 import retrofit2.http.Query
+
+// TODO: 장소 데이터 얻어올때 place_id, geometry도 같이 -> 길찾기 할때 이용
+// TODO: searchByTextInfo 수정해서 파라미터 하나 더 만들고 type 지정해 놓기(tourist_attraction)
 
 data class PlaceInfo(
     val result: Result
@@ -71,7 +73,7 @@ interface ApiService {
 
     @FormUrlEncoded
     @POST("api/searchByTextInfo")
-    fun getNearPlace(@Field("query") query: String): Call<Object>
+    fun getNearPlace(@Field("query") query: String, @Field("place_type") type:String): Call<Object>
 
     @POST("api/directions")
     fun getDirections(@Body request: Map<String, String>): Call<Object>
@@ -102,15 +104,14 @@ object RetrofitClient {
     val apiService: ApiService = retrofit.create(ApiService::class.java)
 }
 
-fun fetchPlaceData(placeId: String):String? {
-    var r:String? = null
+fun fetchPlaceData(placeId: String, viewModel: NavViewModel) {
     val call = RetrofitClient.apiService.getPlaceData(placeId)
     call.enqueue(object : Callback<Object> {
         override fun onResponse(call: Call<Object>, response: Response<Object>) {
             if (response.isSuccessful) {
                 val placeData = response.body()
                 Log.d("API_CALL", "Place Data: $placeData")
-                r = placeData?.toString()
+                viewModel.sendFetchReturn(response.body()?.toString(), viewModel)
             } else {
                 Log.e("API_CALL", "Response not successful: ${response.code()}")
             }
@@ -120,10 +121,9 @@ fun fetchPlaceData(placeId: String):String? {
             Log.e("API_CALL", "Error: ${t.message}")
         }
     })
-    return r
 }
 
-fun fetchPlaceFromQuery(query: String) {
+fun fetchPlaceFromQuery(query: String, viewModel: NavViewModel) {
     val call = RetrofitClient.apiService.getPlaceFromQuery(query)
     call.enqueue(object : Callback<Object> {
         override fun onResponse(call: Call<Object>, response: Response<Object>) {
@@ -131,7 +131,7 @@ fun fetchPlaceFromQuery(query: String) {
 //                val placeInfo = response.body()
 //                Log.d("API_CALL", "Place Info: ${placeInfo?.result?.name}")
                 Log.d("API_CALL", "Place Info: ${response.body()}")
-                getReturn(response.body().toString())
+                viewModel.sendFetchReturn(response.body()?.toString(), viewModel)
             } else {
                 Log.e("API_CALL", "Response not successful: ${response.code()}")
             }
@@ -143,15 +143,14 @@ fun fetchPlaceFromQuery(query: String) {
     })
 }
 
-fun fetchNearPlace(query: String):String? {
-    var r:String? = null
-    val call = RetrofitClient.apiService.getNearPlace(query)
+fun fetchNearPlace(query: String, type:String, viewModel: NavViewModel) {
+    val call = RetrofitClient.apiService.getNearPlace(query, type)
     call.enqueue(object : Callback<Object> {
         override fun onResponse(call: Call<Object>, response: Response<Object>) {
             if (response.isSuccessful) {
                 val nearPlace = response.body()
                 Log.d("API_CALL", "Near Place: ${nearPlace}")
-                r = response.body().toString()
+                viewModel.sendFetchReturn(response.body()?.toString(), viewModel)
             } else {
                 Log.e("API_CALL", "Response not successful: ${response.code()}")
             }
@@ -161,19 +160,18 @@ fun fetchNearPlace(query: String):String? {
             Log.e("API_CALL", "Error: ${t.message}")
         }
     })
-    return r
 }
 
-fun fetchDirections(origin: String, destination: String):String? {
-    var r:String? = null
+fun fetchDirections(origin: String, destination: String, viewModel: NavViewModel) {
     val request = mapOf("origin" to origin, "destination" to destination)
+
     val call = RetrofitClient.apiService.getDirections(request)
     call.enqueue(object : Callback<Object> {
         override fun onResponse(call: Call<Object>, response: Response<Object>) {
             if (response.isSuccessful) {
                 val directions = response.body()
                 Log.d("API_CALL", "Directions: $directions")
-                r = response.body().toString()
+                viewModel.sendFetchReturn(response.body()?.toString(), viewModel)
             } else {
                 Log.e("API_CALL", "Response not successful: ${response.code()}")
             }
@@ -183,5 +181,4 @@ fun fetchDirections(origin: String, destination: String):String? {
             Log.e("API_CALL", "Error: ${t.message}")
         }
     })
-    return r
 }

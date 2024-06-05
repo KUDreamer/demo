@@ -21,12 +21,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.demo.NavViewModel
 import com.example.demo.Routes
 
 
 
 @Composable
-fun AddSchedule(navController: NavHostController) {
+fun AddSchedule(navController: NavHostController, navViewModel: NavViewModel) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(text = "일정 추가",
             fontSize = 25.sp,

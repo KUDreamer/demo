@@ -2,13 +2,17 @@ package com.example.demo
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.demo.db.TripViewModel
 import com.example.demo.screens.AddSchedule
 import com.example.demo.screens.Date
 import com.example.demo.screens.DetailedRestaurant
@@ -17,7 +21,6 @@ import com.example.demo.screens.MyTrip
 import com.example.demo.screens.NewTrip
 import com.example.demo.screens.RestaurantList
 import com.example.demo.screens.detailedScheduleMain
-import com.example.demo.screens.tripList
 
 sealed class Routes(val route: String) {
     object AddSchedule : Routes("AddSchedule")
@@ -27,7 +30,7 @@ sealed class Routes(val route: String) {
     object MyTrip : Routes("MyTrip")
     object NewTrip : Routes("NewTrip")
     object RestaurantList : Routes("RestaurantList")
-    object DetailedSchedule : Routes("DetailedSchedule")
+    object DetailedSchedule : Routes("detailedScheduleMain")
 }
 
 @Composable
@@ -42,50 +45,52 @@ val LocalNavGraphViewModelStoreOwner =
     }
 
 @Composable
-fun NavGraph(navController: NavHostController, navViewModel: NavViewModel) {
-
-    val startScreen = if (navViewModel.HasSchedule) {
-        Routes.MainScreen.route
-    } else {
-        Routes.MainScreen.route
-    }
+fun NavGraph(navController: NavHostController, navViewModel: NavViewModel, tripViewModel: TripViewModel) {
 
     val navStoreOwner = rememberViewModelStoreOwner()
+
+    val trip by tripViewModel.currentTrip.collectAsState()
+
+    val startScreen = if (trip != null) {
+        Routes.MainScreen.route
+    } else {
+        Routes.MyTrip.route
+    }
 
     CompositionLocalProvider(
         LocalNavGraphViewModelStoreOwner provides navStoreOwner
     ) {
         NavHost(navController = navController, startDestination = startScreen) {
             composable(route = Routes.AddSchedule.route) {
-                AddSchedule(navController)
+                AddSchedule(navController, navViewModel)
             }
 
             composable(route = Routes.Date.route) {
-                Date(navController)
+                Date(navController, navViewModel)
             }
 
             composable(route = Routes.DetailedRestaurant.route) {
-                DetailedRestaurant(navController)
+                DetailedRestaurant(navController, navViewModel)
             }
 
             composable(route = Routes.MainScreen.route) {
-                MainScreen(navController, tripList[0])
+                MainScreen(navController, tripViewModel, navViewModel)
             }
 
             composable(route = Routes.MyTrip.route) {
-                MyTrip(navController)
+                MyTrip(navController, tripViewModel, navViewModel)
             }
 
             composable(route = Routes.NewTrip.route) {
-                NewTrip(navController)
+                NewTrip(navController, navViewModel)
             }
 
             composable(route = Routes.RestaurantList.route) {
-                RestaurantList(navController)
+                RestaurantList(navController, navViewModel)
             }
 
             composable(route = Routes.DetailedSchedule.route) {
-                detailedScheduleMain(navController)
+                detailedScheduleMain(navController, navViewModel)
             }
         }
     }

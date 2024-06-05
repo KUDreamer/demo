@@ -49,6 +49,7 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.util.Locale
 import androidx.compose.ui.text.style.TextAlign  // TextAlign을 위한 임포트
+import com.example.demo.NavViewModel
 import java.time.format.TextStyle  // TextStyle을 위한 임포트
 
 
@@ -302,7 +303,7 @@ private fun to_make_schedul(
 }
 
 @Composable
- fun Date(navController: NavHostController) {
+ fun Date(navController: NavHostController, navViewModel: NavViewModel) {
     var selectedDates by remember { mutableStateOf<List<LocalDate>>(emptyList()) }
     val isButtonEnabled = selectedDates.isNotEmpty()
 

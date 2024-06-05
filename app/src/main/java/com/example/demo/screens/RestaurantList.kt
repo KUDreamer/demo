@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.rememberImagePainter
+import com.example.demo.NavViewModel
 import com.example.demo.Photo
 import com.example.demo.R
 import com.example.demo.Routes
@@ -63,23 +64,16 @@ import org.json.JSONObject
 data class ListInfo(var name: String, var img: Int, var che: Boolean) {
 
 }
-////////////
-var returnValue:String? = null
-fun getReturn(output:String) {
-    returnValue = output
-}
-
-/////////////
 
 
 
-private fun respone_text(blocks: List<MutableState<ListInfo>>, searchText: String) {
+private fun respone_text(blocks: List<MutableState<ListInfo>>, searchText: String, navViewModel: NavViewModel) {
     println("aaaaaaaaaaaaaaa")
 
-    fetchPlaceFromQuery(searchText)
+    fetchPlaceFromQuery(searchText, navViewModel)
 
-    var json_s = returnValue
-    println(json_s)
+    var json_s = navViewModel.fetchReturn
+
     if(json_s == null) {
         json_s = """{
         "candidates": [{
@@ -124,7 +118,7 @@ private fun respone_text(blocks: List<MutableState<ListInfo>>, searchText: Strin
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun FieldTop(navController: NavHostController, isActive: Boolean,blocks: List<MutableState<ListInfo>>) {
+private fun FieldTop(navController: NavHostController, isActive: Boolean,blocks: List<MutableState<ListInfo>>, navViewModel: NavViewModel) {
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
     val fieldTopHeight = screenHeight / 8  // 화면 높이의 1/8
@@ -174,7 +168,7 @@ private fun FieldTop(navController: NavHostController, isActive: Boolean,blocks:
             ),
             keyboardActions = KeyboardActions(
                 onSearch = {
-                    respone_text(blocks, searchText)//검색어 들어온다면 검색어 기반으로 8개 넣기
+                    respone_text(blocks, searchText, navViewModel)//검색어 들어온다면 검색어 기반으로 8개 넣기
                 }
             ),
             colors = TextFieldDefaults.outlinedTextFieldColors(
@@ -290,7 +284,7 @@ fun rand(start: Int, end: Int): Int {
 
 
 @Composable
-fun RestaurantList(navController: NavHostController) {
+fun RestaurantList(navController: NavHostController, navViewModel: NavViewModel) {
     // 초기 데이터 및 상태 정의
     val images = R.drawable.exres
     val foods = listOf(
@@ -313,7 +307,7 @@ fun RestaurantList(navController: NavHostController) {
     }
 
     LaunchedEffect(key1 = Unit) {
-        respone_text(blocks,foods[rraand])
+        respone_text(blocks,foods[rraand], navViewModel)
     }
 
 
@@ -330,7 +324,7 @@ fun RestaurantList(navController: NavHostController) {
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        FieldTop(navController, checkedCount.value > 0,blocks) // 활성화 상태 전달
+        FieldTop(navController, checkedCount.value > 0,blocks, navViewModel) // 활성화 상태 전달
         menu_box(blocks,navController) // 체크 상태 업데이트 함수 전달
     }
 }
