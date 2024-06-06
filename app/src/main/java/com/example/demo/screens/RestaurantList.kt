@@ -74,7 +74,7 @@ private fun respone_text(blocks: List<MutableState<ListInfo>>, searchText: Strin
 
     var json_s = navViewModel.fetchReturn
 
-    if(json_s == null) {
+    if(json_s == null || json_s.isEmpty()) {
         json_s = """{
         "candidates": [{
             "formatted_address": "대한민국 서울특별시 광진구 자양제3동 1",
@@ -90,26 +90,32 @@ private fun respone_text(blocks: List<MutableState<ListInfo>>, searchText: Strin
         "status": "OK"
     }"""
     }
-    val jsonObject = JSONObject(json_s)
-    val candidates = jsonObject.getJSONArray("candidates")
 
-    for (i in 0 until candidates.length()) {
-        val candidate = candidates.getJSONObject(i)
-        val formattedAddress = candidate.getString("formatted_address")
-        val name = candidate.getString("name")
-        val rating = candidate.getDouble("rating")
-        val photos = candidate.getJSONArray("photos")
-        val photo = photos.getJSONObject(0)
-        val height = photo.getDouble("height")
-        val width = photo.getDouble("width")
-        val photoReference = photo.getString("photo_reference")
-        val htmlAttributions = photo.getJSONArray("html_attributions").getString(0)
+    try {
+        val jsonObject = JSONObject(json_s)
+        val candidates = jsonObject.getJSONArray("candidates")
 
-        println("Formatted Address: $formattedAddress")
-        println("Name: $name")
-        println("Rating: $rating")
-        println("Photo - Height: $height, Width: $width, Photo Reference: $photoReference")
-        println("HTML Attributions: $htmlAttributions")
+        for (i in 0 until candidates.length()) {
+            val candidate = candidates.getJSONObject(i)
+            val formattedAddress = candidate.getString("formatted_address")
+            val name = candidate.getString("name")
+            val rating = candidate.getDouble("rating")
+            val photos = candidate.getJSONArray("photos")
+            val photo = photos.getJSONObject(0)
+            val height = photo.getDouble("height")
+            val width = photo.getDouble("width")
+            val photoReference = photo.getString("photo_reference")
+            val htmlAttributions = photo.getJSONArray("html_attributions").getString(0)
+
+            println("Formatted Address: $formattedAddress")
+            println("Name: $name")
+            println("Rating: $rating")
+            println("Photo - Height: $height, Width: $width, Photo Reference: $photoReference")
+            println("HTML Attributions: $htmlAttributions")
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        Log.e("JSONParsingError", "Error parsing JSON response", e)
     }
 
 
