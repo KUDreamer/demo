@@ -69,7 +69,7 @@ interface ApiService {
 
     @FormUrlEncoded
     @POST("api/searchPlaceInfo")
-    fun getPlaceFromQuery(@Field("query") query: String): Call<Object>
+    suspend fun getPlaceFromQuery(@Field("query") query: String): Response<Object>
 
     @FormUrlEncoded
     @POST("api/searchByTextInfo")
@@ -123,24 +123,18 @@ fun fetchPlaceData(placeId: String, viewModel: NavViewModel) {
     })
 }
 
-fun fetchPlaceFromQuery(query: String, viewModel: NavViewModel) {
-    val call = RetrofitClient.apiService.getPlaceFromQuery(query)
-    call.enqueue(object : Callback<Object> {
-        override fun onResponse(call: Call<Object>, response: Response<Object>) {
-            if (response.isSuccessful) {
-//                val placeInfo = response.body()
-//                Log.d("API_CALL", "Place Info: ${placeInfo?.result?.name}")
-                Log.d("API_CALL", "Place Info: ${response.body()}")
-                viewModel.sendFetchReturn(response.body()?.toString(), viewModel)
-            } else {
-                Log.e("API_CALL", "Response not successful: ${response.code()}")
-            }
+suspend fun fetchPlaceFromQuery(query: String, viewModel: NavViewModel) {
+    try {
+        val response = RetrofitClient.apiService.getPlaceFromQuery(query)
+        if (response.isSuccessful) {
+            Log.d("API_CALL", "Place Info: ${response.body()}")
+            viewModel.sendFetchReturn(response.body()?.toString(), viewModel)
+        } else {
+            Log.e("API_CALL", "Response not successful: ${response.code()}")
         }
-
-        override fun onFailure(call: Call<Object>, t: Throwable) {
-            Log.e("API_CALL", "Error: ${t.message}")
-        }
-    })
+    } catch (e: Exception) {
+        Log.e("API_CALL", "Error: ${e.message}")
+    }
 }
 
 fun fetchNearPlace(query: String, type:String, viewModel: NavViewModel) {

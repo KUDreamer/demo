@@ -90,4 +90,5 @@ dependencies {
     implementation ("com.squareup.okhttp3:okhttp:4.9.2")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
+    implementation("io.coil-kt:coil-compose:1.4.0")
 }
