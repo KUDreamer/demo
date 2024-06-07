@@ -36,7 +36,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.demo.NavViewModel
 import com.example.demo.Routes
-import com.example.demo.AddressComponent_view
 import com.example.demo.Photo_view
 import com.example.demo.OpeningHours_view
 import com.example.demo.Result_view
@@ -49,9 +48,6 @@ data class RestaurantData(
     val phoneNumber: String,
     val hasPhoneNumber: Boolean,
     val imageUrl1: String,
-    val imageUrl2: String,
-    val imageUrl3: String,
-    val imageUrl4: String,
     val operatingHoursText: String,
     val hasOperatingHours: Boolean,
     val hashtags: List<String>,
@@ -63,36 +59,7 @@ data class RestaurantData(
 
 fun DetailedRestaurant(navController: NavHostController, navViewModel: NavViewModel = viewModel()) {
     // Example data to be used in NavViewModel
-    val sampleAddressComponents = listOf(
-        AddressComponent_view().apply {
-            long_name = "서울시 광진구 능동로 120"
-            short_name = "서울시"
-            types = listOf("street_address")
-        }
-    )
-
-    val samplePhotos = listOf(
-        Photo_view().apply {
-            height = "180"
-            width = "170"
-            photo_reference = "https://via.placeholder.com/170x180.png?text=Food+Image+1"
-        },
-        Photo_view().apply {
-            height = "85"
-            width = "170"
-            photo_reference = "https://via.placeholder.com/170x85.png?text=Food+Image+2"
-        },
-        Photo_view().apply {
-            height = "200"
-            width = "85"
-            photo_reference = "https://via.placeholder.com/85x200.png?text=Food+Image+3"
-        },
-        Photo_view().apply {
-            height = "200"
-            width = "85"
-            photo_reference = "https://via.placeholder.com/85x200.png?text=Food+Image+4"
-        }
-    )
+    val samplePhotos = navViewModel.getPhoto()
 
     val sampleOpeningHours = OpeningHours_view().apply {
         open_now = "true"
@@ -106,11 +73,11 @@ fun DetailedRestaurant(navController: NavHostController, navViewModel: NavViewMo
     }
 
     val sampleResult = Result_view().apply {
-        address_components = sampleAddressComponents
+        address = "서울시 광진구 뭐시기 저시기"
         formatted_phone_number = "010-1234-1234"
         name = "마라비빔면&쇠고기"
         opening_hours = sampleOpeningHours
-        photos = samplePhotos
+        photo = samplePhotos
         rating = "2.6"
     }
 
@@ -120,6 +87,9 @@ fun DetailedRestaurant(navController: NavHostController, navViewModel: NavViewMo
     }
 
     // Set sample data to ViewModel
+
+    val real_DataModel = navViewModel.getData()
+
     navViewModel.setData(sampleDataModel)
 
     val restaurantData = navViewModel.dataModel.value?.result?.let {
@@ -129,14 +99,11 @@ fun DetailedRestaurant(navController: NavHostController, navViewModel: NavViewMo
             reviewCount = 107,
             phoneNumber = it.formatted_phone_number ?: "",
             hasPhoneNumber = it.formatted_phone_number != null,
-            imageUrl1 = it.photos?.getOrNull(0)?.photo_reference ?: "",
-            imageUrl2 = it.photos?.getOrNull(1)?.photo_reference ?: "",
-            imageUrl3 = it.photos?.getOrNull(2)?.photo_reference ?: "",
-            imageUrl4 = it.photos?.getOrNull(3)?.photo_reference ?: "",
+            imageUrl1 = (it.photo.toString()),
             operatingHoursText = it.opening_hours?.weekday_text?.joinToString("\n") ?: "",
             hasOperatingHours = it.opening_hours != null,
             hashtags = listOf("#냉면", "#마라마라", "#마라마라기"),
-            address = it.address_components?.joinToString(", ") { comp -> comp.long_name ?: "" } ?: ""
+            address = it.address.toString()
         )
     }
 
@@ -180,7 +147,7 @@ fun BackButton(navController: NavHostController) {
 }
 
 @Composable
-fun MainContent(restaurantData: RestaurantData, modifier: Modifier = Modifier, navController: NavHostController) {
+fun MainContent(restaurantData: RestaurantData, modifier: Modifier = Modifier, navController: NavHostController, navViewModel: NavViewModel = viewModel()) {
     var isExpanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
@@ -215,39 +182,6 @@ fun MainContent(restaurantData: RestaurantData, modifier: Modifier = Modifier, n
                                 .height(180.dp)
                                 .padding(end = 8.dp)
                         )
-                        Column(
-                            verticalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier.height(180.dp)
-                        ) {
-                            AsyncImage(
-                                model = restaurantData.imageUrl2,
-                                contentDescription = "음식 이미지",
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .width(170.dp)
-                                    .height(85.dp)
-                                    .padding(bottom = 8.dp)
-                            )
-                            Row {
-                                AsyncImage(
-                                    model = restaurantData.imageUrl3,
-                                    contentDescription = "음식 이미지",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .width(85.dp)
-                                        .height(200.dp)
-                                        .padding(end = 8.dp)
-                                )
-                                AsyncImage(
-                                    model = restaurantData.imageUrl4,
-                                    contentDescription = "음식 이미지",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .width(85.dp)
-                                        .height(200.dp)
-                                )
-                            }
-                        }
                     }
                 }
             }
@@ -484,6 +418,10 @@ fun MainContent(restaurantData: RestaurantData, modifier: Modifier = Modifier, n
         }
         Button(
             onClick = {
+                val adding = navViewModel.getData()
+                if (adding != null) {
+                    navViewModel.addDataModelForDate(navViewModel.getCurrentDate().toString(),adding)
+                }
                 navController.navigate(Routes.Date.route)
             },
             modifier = Modifier
