@@ -34,7 +34,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import kotlinx.coroutines.launch
 
 
-data class ListInfo(var name: String, var img: String, var address: String , var rate: Double )
+
+data class ListInfo(var name: String, var img: String, var address: String , var rate: Double)
 
 private suspend fun respone_text(block: MutableState<ListInfo>, searchText: String, navViewModel: NavViewModel) {
     //println("aaaaaaaaaaaaaaa")
@@ -74,6 +75,16 @@ private suspend fun respone_text(block: MutableState<ListInfo>, searchText: Stri
         val rating = ratingMatch?.groups?.get(1)?.value?.toDouble() ?: 0.0
         println(rating)
         //예시 별점 4.5 같이 소스점 한자리까지
+        val widthRegex = "width=([\\d.]+)".toRegex()
+        val widthMatch = widthRegex.find(json_s)
+        val width = widthMatch?.groups?.get(1)?.value?.toDouble() ?: 0.0
+        println(width)
+
+        // Extract height
+        val heightRegex = "height=([\\d.]+)".toRegex()
+        val heightMatch = heightRegex.find(json_s)
+        val height = heightMatch?.groups?.get(1)?.value?.toDouble() ?: 0.0
+        println(height)
 
          //Update the block with parsed data
         block.value = ListInfo(
@@ -181,9 +192,15 @@ private fun FieldTop(
         )
     }
 }
+fun send_info(blockA: MutableState<ListInfo>,navController: NavViewModel) {
+    navController.setRating((blockA.value.rate).toString())
+    navController.setName(blockA.value.name)
+    //navController.setPhotos({blockA.value.img})
+    navController.setAddress(blockA.value.address)
+}
 
 @Composable
-private fun small_Box(blockA: MutableState<ListInfo>, navController: NavHostController) {
+private fun small_Box(blockA: MutableState<ListInfo>, navController: NavHostController,navViewModel: NavViewModel) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -212,7 +229,10 @@ private fun small_Box(blockA: MutableState<ListInfo>, navController: NavHostCont
                     Color.Gray,
                     shape = RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp)
                 )
-                .clickable(onClick = { navController.navigate(Routes.DetailedRestaurant.route) }),
+                .clickable(onClick = {
+                    send_info(blockA,navViewModel)
+                    navController.navigate(Routes.DetailedRestaurant.route)
+                }),
             contentAlignment = Alignment.Center
         ) {
             if (blockA.value.img.isNotEmpty()) {
@@ -241,7 +261,7 @@ private fun small_Box(blockA: MutableState<ListInfo>, navController: NavHostCont
 
 
 @Composable
-private fun check_box_rest(blockA: MutableState<ListInfo>, blockB: MutableState<ListInfo>, navController: NavHostController) {
+private fun check_box_rest(blockA: MutableState<ListInfo>, blockB: MutableState<ListInfo>, navController: NavHostController,navViewModel: NavViewModel) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -253,7 +273,7 @@ private fun check_box_rest(blockA: MutableState<ListInfo>, blockB: MutableState<
                 .size(140.dp)
                 .background(Color.White, RoundedCornerShape(20.dp))
         ) {
-            small_Box(blockA, navController)  // 체크 상태 변경 함수 전달
+            small_Box(blockA, navController,navViewModel)  // 체크 상태 변경 함수 전달
         }
         Spacer(modifier = Modifier.width(40.dp))
         Box(
@@ -262,13 +282,13 @@ private fun check_box_rest(blockA: MutableState<ListInfo>, blockB: MutableState<
                 .size(140.dp)
                 .background(Color.White, RoundedCornerShape(20.dp))
         ) {
-            small_Box(blockB, navController)  // 체크 상태 변경 함수 전달
+            small_Box(blockB, navController,navViewModel)  // 체크 상태 변경 함수 전달
         }
     }
 }
 
 @Composable
-private fun menu_box(blocks: List<MutableState<ListInfo>>, navController: NavHostController) {
+private fun menu_box(blocks: List<MutableState<ListInfo>>, navController: NavHostController,navViewModel: NavViewModel) {
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
     val fieldTopHeight = (screenHeight / 8) * 7  // 화면 높이의 7/8
@@ -284,10 +304,10 @@ private fun menu_box(blocks: List<MutableState<ListInfo>>, navController: NavHos
             verticalArrangement = Arrangement.spacedBy(40.dp),  // 열 내 요소 사이의 간격
             horizontalAlignment = Alignment.CenterHorizontally  // 모든 아이템을 가로 방향으로 중앙 정렬
         ) {
-            check_box_rest(blocks[0], blocks[1], navController)
-            check_box_rest(blocks[2], blocks[3], navController)
-            check_box_rest(blocks[4], blocks[5], navController)
-            check_box_rest(blocks[6], blocks[7], navController)
+            check_box_rest(blocks[0], blocks[1], navController,navViewModel)
+            check_box_rest(blocks[2], blocks[3], navController,navViewModel)
+            check_box_rest(blocks[4], blocks[5], navController,navViewModel)
+            check_box_rest(blocks[6], blocks[7], navController,navViewModel)
         }
     }
 }
@@ -331,6 +351,6 @@ fun RestaurantList(navController: NavHostController, navViewModel: NavViewModel)
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         FieldTop(navController, checkedCount.value > 0, blocks, navViewModel) // 활성화 상태 전달
-        menu_box(blocks, navController) // 체크 상태 업데이트 함수 전달
+        menu_box(blocks, navController,navViewModel) // 체크 상태 업데이트 함수 전달
     }
 }
