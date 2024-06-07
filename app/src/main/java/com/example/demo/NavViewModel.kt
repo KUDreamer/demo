@@ -6,25 +6,6 @@ import androidx.lifecycle.ViewModel
 
 
 // AddressComponent_view 클래스
-class AddressComponent_view {
-    var long_name: String? = null
-        get() = field
-        set(value) {
-            field = value
-        }
-
-    var short_name: String? = null
-        get() = field
-        set(value) {
-            field = value
-        }
-
-    var types: List<String>? = null
-        get() = field
-        set(value) {
-            field = value
-        }
-}
 
 // TimeInfo_view 클래스
 class TimeInfo_view {
@@ -106,7 +87,7 @@ class Photo_view {
 
 // Result_view 클래스
 class Result_view {
-    var address_components: List<AddressComponent_view>? = null
+    var address: String? = null
         get() = field
         set(value) {
             field = value
@@ -144,6 +125,7 @@ class Result_view {
 }
 
 // DataModel_view 클래스
+// ViewModel 클래스
 class DataModel_view {
     var html_attributions: List<String>? = null
         get() = field
@@ -164,37 +146,39 @@ class DataModel_view {
         }
 }
 
-// ViewModel 클래스
+// ViewModel class
 class NavViewModel : ViewModel() {
 
-    private val _dataModel = MutableLiveData<DataModel_view>()
-    var fetchReturn:String? = null
+    var fetchReturn: String? = null
 
-    fun sendFetchReturn(output:String?, viewModel: NavViewModel) {
+    fun sendFetchReturn(output: String?, viewModel: NavViewModel) {
         viewModel.fetchReturn = output
     }
+
+    // data model -- > api에서 가져온 데이터들이 들어가있는 view model
+    private val _dataModel = MutableLiveData<DataModel_view>()
     val dataModel: LiveData<DataModel_view> get() = _dataModel
 
-    // 데이터 설정 메소드
+    // Set data method
     fun setData(data: DataModel_view) {
         _dataModel.value = data
     }
 
-    // 데이터 가져오는 메소드
+    // Get data method
     fun getData(): DataModel_view? {
         return _dataModel.value
     }
 
-    // AddressComponent 설정 및 가져오기 메소드
-    fun setAddressComponents(addressComponents: List<AddressComponent_view>?) {
-        _dataModel.value?.result?.address_components = addressComponents
+    // Address setting and getting method
+    fun setAddress(address: String?) {
+        _dataModel.value?.result?.address = address
     }
 
-    fun getAddressComponents(): List<AddressComponent_view>? {
-        return _dataModel.value?.result?.address_components
+    fun getAddress(): String? {
+        return _dataModel.value?.result?.address
     }
 
-    // FormattedPhoneNumber 설정 및 가져오기 메소드
+    // FormattedPhoneNumber setting and getting method
     fun setFormattedPhoneNumber(phoneNumber: String?) {
         _dataModel.value?.result?.formatted_phone_number = phoneNumber
     }
@@ -203,7 +187,7 @@ class NavViewModel : ViewModel() {
         return _dataModel.value?.result?.formatted_phone_number
     }
 
-    // Name 설정 및 가져오기 메소드
+    // Name setting and getting method
     fun setName(name: String?) {
         _dataModel.value?.result?.name = name
     }
@@ -212,7 +196,7 @@ class NavViewModel : ViewModel() {
         return _dataModel.value?.result?.name
     }
 
-    // OpeningHours 설정 및 가져오기 메소드
+    // OpeningHours setting and getting method
     fun setOpeningHours(openingHours: OpeningHours_view?) {
         _dataModel.value?.result?.opening_hours = openingHours
     }
@@ -221,7 +205,7 @@ class NavViewModel : ViewModel() {
         return _dataModel.value?.result?.opening_hours
     }
 
-    // Photos 설정 및 가져오기 메소드
+    // Photos setting and getting method
     fun setPhotos(photos: List<Photo_view>?) {
         _dataModel.value?.result?.photos = photos
     }
@@ -230,7 +214,7 @@ class NavViewModel : ViewModel() {
         return _dataModel.value?.result?.photos
     }
 
-    // Rating 설정 및 가져오기 메소드
+    // Rating setting and getting method
     fun setRating(rating: String?) {
         _dataModel.value?.result?.rating = rating
     }
@@ -239,7 +223,7 @@ class NavViewModel : ViewModel() {
         return _dataModel.value?.result?.rating
     }
 
-    // HtmlAttributions 설정 및 가져오기 메소드
+    // HtmlAttributions setting and getting method
     fun setHtmlAttributions(htmlAttributions: List<String>?) {
         _dataModel.value?.html_attributions = htmlAttributions
     }
@@ -248,7 +232,7 @@ class NavViewModel : ViewModel() {
         return _dataModel.value?.html_attributions
     }
 
-    // Status 설정 및 가져오기 메소드
+    // Status setting and getting method
     fun setStatus(status: String?) {
         _dataModel.value?.status = status
     }
@@ -256,5 +240,24 @@ class NavViewModel : ViewModel() {
     fun getStatus(): String? {
         return _dataModel.value?.status
     }
-}
 
+    //data models -- > 현재 저장된 데이터 모델들을 관리하는 리스트
+    //
+
+    private val _dataModels = MutableLiveData<List<DataModel_view>>(emptyList())
+    val dataModels: LiveData<List<DataModel_view>> get() = _dataModels
+    fun addDataModel(dataModel: DataModel_view) {
+        _dataModels.value = _dataModels.value.orEmpty() + dataModel
+    }
+    fun removeDataModel(index: Int) {
+        _dataModels.value = _dataModels.value?.toMutableList()?.apply {
+            removeAt(index)
+        }
+    }
+    fun setDataModels(dataModels: List<DataModel_view>) {
+        _dataModels.value = dataModels
+    }
+    fun getDataModels(): List<DataModel_view>? {
+        return _dataModels.value
+    }
+}

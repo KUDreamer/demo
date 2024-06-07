@@ -68,7 +68,6 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.room.ktx)
     implementation(libs.androidx.core.animation)
-    implementation(libs.androidx.room.common)
     kapt(libs.androidx.room.compiler)
     implementation(libs.reorderable)
     implementation(libs.gson)
