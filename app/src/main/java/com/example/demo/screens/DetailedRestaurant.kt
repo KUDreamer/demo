@@ -7,8 +7,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -26,17 +25,22 @@ import androidx.compose.ui.res.painterResource
 import coil.compose.AsyncImage
 import com.example.demo.R
 import com.example.demo.ui.theme.DemoTheme
-import org.json.JSONObject
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.TopAppBar
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.demo.NavViewModel
 import com.example.demo.Routes
+import com.example.demo.AddressComponent_view
+import com.example.demo.Photo_view
+import com.example.demo.OpeningHours_view
+import com.example.demo.Result_view
+import com.example.demo.DataModel_view
 
 data class RestaurantData(
     val name: String,
@@ -55,8 +59,86 @@ data class RestaurantData(
 )
 
 @Composable
-fun DetailedRestaurant(navController: NavHostController, navViewModel: NavViewModel) {
-    val restaurantData = fetchRestaurantData()
+@OptIn(ExperimentalMaterial3Api::class)
+
+fun DetailedRestaurant(navController: NavHostController, navViewModel: NavViewModel = viewModel()) {
+    // Example data to be used in NavViewModel
+    val sampleAddressComponents = listOf(
+        AddressComponent_view().apply {
+            long_name = "서울시 광진구 능동로 120"
+            short_name = "서울시"
+            types = listOf("street_address")
+        }
+    )
+
+    val samplePhotos = listOf(
+        Photo_view().apply {
+            height = "180"
+            width = "170"
+            photo_reference = "https://via.placeholder.com/170x180.png?text=Food+Image+1"
+        },
+        Photo_view().apply {
+            height = "85"
+            width = "170"
+            photo_reference = "https://via.placeholder.com/170x85.png?text=Food+Image+2"
+        },
+        Photo_view().apply {
+            height = "200"
+            width = "85"
+            photo_reference = "https://via.placeholder.com/85x200.png?text=Food+Image+3"
+        },
+        Photo_view().apply {
+            height = "200"
+            width = "85"
+            photo_reference = "https://via.placeholder.com/85x200.png?text=Food+Image+4"
+        }
+    )
+
+    val sampleOpeningHours = OpeningHours_view().apply {
+        open_now = "true"
+        weekday_text = listOf(
+            "평일 09:00-13:00 브레이크 타임 13:00 라스트 오더",
+            "09:00-13:00 토요일",
+            "09:00-13:00 일요일",
+            "09:00-13:00 휴일",
+            "09:00-13:00 그 외 쉬는날"
+        )
+    }
+
+    val sampleResult = Result_view().apply {
+        address_components = sampleAddressComponents
+        formatted_phone_number = "010-1234-1234"
+        name = "마라비빔면&쇠고기"
+        opening_hours = sampleOpeningHours
+        photos = samplePhotos
+        rating = "2.6"
+    }
+
+    val sampleDataModel = DataModel_view().apply {
+        result = sampleResult
+        status = "OK"
+    }
+
+    // Set sample data to ViewModel
+    navViewModel.setData(sampleDataModel)
+
+    val restaurantData = navViewModel.dataModel.value?.result?.let {
+        RestaurantData(
+            name = it.name ?: "",
+            rating = it.rating ?: "0.0",
+            reviewCount = 107,
+            phoneNumber = it.formatted_phone_number ?: "",
+            hasPhoneNumber = it.formatted_phone_number != null,
+            imageUrl1 = it.photos?.getOrNull(0)?.photo_reference ?: "",
+            imageUrl2 = it.photos?.getOrNull(1)?.photo_reference ?: "",
+            imageUrl3 = it.photos?.getOrNull(2)?.photo_reference ?: "",
+            imageUrl4 = it.photos?.getOrNull(3)?.photo_reference ?: "",
+            operatingHoursText = it.opening_hours?.weekday_text?.joinToString("\n") ?: "",
+            hasOperatingHours = it.opening_hours != null,
+            hashtags = listOf("#냉면", "#마라마라", "#마라마라기"),
+            address = it.address_components?.joinToString(", ") { comp -> comp.long_name ?: "" } ?: ""
+        )
+    }
 
     DemoTheme {
         Scaffold(
@@ -67,13 +149,15 @@ fun DetailedRestaurant(navController: NavHostController, navViewModel: NavViewMo
                     navigationIcon = {
                         BackButton(navController = navController)
                     },
-                    backgroundColor = Color.White
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.White
+                    )
                 )
             }
         ) { innerPadding ->
-            if (restaurantData != null) {
+            restaurantData?.let {
                 MainContent(
-                    restaurantData = restaurantData,
+                    restaurantData = it,
                     modifier = Modifier.padding(innerPadding),
                     navController = navController
                 )
@@ -93,50 +177,6 @@ fun BackButton(navController: NavHostController) {
                 navController.popBackStack()
             }
     )
-}
-
-private fun fetchRestaurantData(): RestaurantData? {
-    val jsonString = """
-        {
-            "name": "마라비빔면&쇠고기",
-            "rating": "2.6",
-            "reviewCount": 107,
-            "phoneNumber": "010-1234-1234",
-            "hasPhoneNumber": true,
-            "imageUrl1": "https://via.placeholder.com/170x180.png?text=Food+Image+1",
-            "imageUrl2": "https://via.placeholder.com/170x85.png?text=Food+Image+2",
-            "imageUrl3": "https://via.placeholder.com/85x200.png?text=Food+Image+3",
-            "imageUrl4": "https://via.placeholder.com/85x200.png?text=Food+Image+4",
-            "operatingHoursText": "평일\n09:00-13:00 브레이크 타임\n13:00 라스트 오더\n09:00-13:00 토요일\n09:00-13:00 일요일\n09:00-13:00 휴일\n09:00-13:00 그 외 쉬는날",
-            "hasOperatingHours": true,
-            "hashtags": ["#냉면", "#마라마라", "#마라마라기"],
-            "address": "서울시 광진구 능동로 120"
-        }
-    """.trimIndent()
-
-    return try {
-        val jsonObject = JSONObject(jsonString)
-        RestaurantData(
-            name = jsonObject.getString("name"),
-            rating = jsonObject.getString("rating"),
-            reviewCount = jsonObject.getInt("reviewCount"),
-            phoneNumber = jsonObject.getString("phoneNumber"),
-            hasPhoneNumber = jsonObject.getBoolean("hasPhoneNumber"),
-            imageUrl1 = jsonObject.getString("imageUrl1"),
-            imageUrl2 = jsonObject.getString("imageUrl2"),
-            imageUrl3 = jsonObject.getString("imageUrl3"),
-            imageUrl4 = jsonObject.getString("imageUrl4"),
-            operatingHoursText = jsonObject.getString("operatingHoursText"),
-            hasOperatingHours = jsonObject.getBoolean("hasOperatingHours"),
-            hashtags = jsonObject.getJSONArray("hashtags").let { array ->
-                List(array.length()) { array.getString(it) }
-            },
-            address = jsonObject.getString("address")
-        )
-    } catch (e: Exception) {
-        e.printStackTrace()
-        null
-    }
 }
 
 @Composable
@@ -461,7 +501,7 @@ fun MainContent(restaurantData: RestaurantData, modifier: Modifier = Modifier, n
                 modifier = Modifier.fillMaxSize()
             ) {
                 Text(
-                    text = "음식점 선택",
+                    text = "장소 선택",
                     fontSize = 14.sp,
                     lineHeight = 33.41.sp,
                     fontWeight = FontWeight.W300,
@@ -483,31 +523,11 @@ fun MainContent(restaurantData: RestaurantData, modifier: Modifier = Modifier, n
 @Preview(showBackground = true)
 @Composable
 fun DetailedRestaurantPreview() {
+    val navController = rememberNavController()
+    val navViewModel: NavViewModel = viewModel()
+
     DemoTheme {
-        val sampleData = RestaurantData(
-            name = "마라비빔면&쇠고기",
-            rating = "2.6",
-            reviewCount = 107,
-            phoneNumber = "010-1234-1234",
-            hasPhoneNumber = true,
-            imageUrl1 = "https://via.placeholder.com/170x180.png?text=Food+Image+1",
-            imageUrl2 = "https://via.placeholder.com/170x85.png?text=Food+Image+2",
-            imageUrl3 = "https://via.placeholder.com/85x200.png?text=Food+Image+3",
-            imageUrl4 = "https://via.placeholder.com/85x200.png?text=Food+Image+4",
-            operatingHoursText = """
-                평일
-                09:00-13:00 브레이크 타임
-                13:00 라스트 오더
-                09:00-13:00 토요일
-                09:00-13:00 일요일
-                09:00-13:00 휴일
-                09:00-13:00 그 외 쉬는날
-            """.trimIndent(),
-            hasOperatingHours = true,
-            hashtags = listOf("#냉면", "#마라마라", "#마라마라기"),
-            address = "서울시 광진구 능동로 120"
-        )
-        MainContent(restaurantData = sampleData, navController = rememberNavController())
+        DetailedRestaurant(navController = navController, navViewModel = navViewModel)
     }
 }
 

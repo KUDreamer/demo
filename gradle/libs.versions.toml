@@ -19,6 +19,7 @@ okhttp = "5.0.0-alpha.14"
 loggingInterceptor = "5.0.0-alpha.14"
 roomCompiler = "2.7.0-alpha03"
 roomKtxVersion = "2.7.0-alpha03"
+coreAnimation = "1.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -46,6 +47,7 @@ okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhtt
 logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "loggingInterceptor" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "roomCompiler" }
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtxVersion" }
+androidx-core-animation = { group = "androidx.core", name = "core-animation", version.ref = "coreAnimation" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
