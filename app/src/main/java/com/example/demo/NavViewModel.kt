@@ -150,6 +150,9 @@ class DataModel_view {
 // ViewModel class
 class NavViewModel : ViewModel() {
 
+    // 2024.06.08 이후 fetchReturn값의 형태가 조금 바뀌었습니다.
+    // 기존의 fetchReturn은 json문법을 제대로 지키지 않은 형태였습니다. e.g., location: "서울특별시"
+    // key값을 ""가 감싸는 형태로 fetchReturn값을 수정했습니다. e.g., "location": "서울특별시"
     var fetchReturn: String? = null
 
     fun sendFetchReturn(output: String?, viewModel: NavViewModel) {
