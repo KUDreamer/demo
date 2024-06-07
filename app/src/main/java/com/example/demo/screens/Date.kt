@@ -279,7 +279,8 @@ private fun textfiled2(fixedText: String) {
 @Composable
 private fun to_make_schedul(
     navController: NavHostController, isButtonEnabled: Boolean,
-    selectedDates: List<LocalDate>
+    selectedDates: List<LocalDate>,
+    navViewModel: NavViewModel
 ) {
     val buttonColor = if (isButtonEnabled) Color(0xFFFF9730) else Color.Gray  // 버튼 활성화 상태에 따른 색상 설정
 
@@ -288,7 +289,7 @@ private fun to_make_schedul(
             if (isButtonEnabled) {
                 navController.navigate(Routes.DetailedSchedule.route)  // 버튼이 활성화 상태일 때만 네비게이션 실행
                 //navController.navigate(Routes.DetailedRestaurant.route,selectedDates)
-                //selectedDates날짜 정보 넘김
+                //navViewModel.setdate?
             }
         },
         modifier = Modifier
@@ -317,6 +318,6 @@ private fun to_make_schedul(
         }
         textfiled1(if (selectedDates.size > 0) (selectedDates[0]).toString() else "0000-00-00")
         textfiled2(if (selectedDates.size > 1) selectedDates[1].toString() else "0000-00-00")
-        to_make_schedul(navController, isButtonEnabled,selectedDates)
+        to_make_schedul(navController, isButtonEnabled,selectedDates,navViewModel)
     }
 }

@@ -66,13 +66,7 @@ class Photo_view {
             field = value
         }
 
-    var html_attributions: List<String>? = null
-        get() = field
-        set(value) {
-            field = value
-        }
-
-    var photo_reference: String? = null
+    var photo_reference: List<String>? = null
         get() = field
         set(value) {
             field = value
