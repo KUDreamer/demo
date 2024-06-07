@@ -4,6 +4,7 @@ import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
+import okhttp3.ResponseBody
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Call
 import retrofit2.Callback
@@ -73,7 +74,7 @@ interface ApiService {
 
     @FormUrlEncoded
     @POST("api/searchByTextInfo")
-    fun getNearPlace(@Field("query") query: String, @Field("place_type") type:String): Call<Object>
+    fun getNearPlace(@Field("query") query: String, @Field("place_type") type:String): Call<ResponseBody>
 
     @POST("api/directions")
     fun getDirections(@Body request: Map<String, String>): Call<Object>
@@ -139,18 +140,18 @@ suspend fun fetchPlaceFromQuery(query: String, viewModel: NavViewModel) {
 
 fun fetchNearPlace(query: String, type:String, viewModel: NavViewModel) {
     val call = RetrofitClient.apiService.getNearPlace(query, type)
-    call.enqueue(object : Callback<Object> {
-        override fun onResponse(call: Call<Object>, response: Response<Object>) {
+    call.enqueue(object : Callback<ResponseBody> {
+        override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
             if (response.isSuccessful) {
                 val nearPlace = response.body()
-                Log.d("API_CALL", "Near Place: ${nearPlace}")
+                Log.d("API_CALL", "Near Place: ${nearPlace?.string()}")
                 viewModel.sendFetchReturn(response.body()?.toString(), viewModel)
             } else {
                 Log.e("API_CALL", "Response not successful: ${response.code()}")
             }
         }
 
-        override fun onFailure(call: Call<Object>, t: Throwable) {
+        override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
             Log.e("API_CALL", "Error: ${t.message}")
         }
     })

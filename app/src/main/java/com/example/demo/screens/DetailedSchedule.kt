@@ -63,6 +63,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Card
 import androidx.compose.material3.IconButton
@@ -71,13 +72,19 @@ import androidx.compose.ui.draw.shadow
 import androidx.navigation.NavHostController
 import com.example.demo.NavViewModel
 import com.example.demo.Routes
+import com.example.demo.fetchNearPlace
+import com.example.demo.fetchPlaceFromQuery
+import com.google.gson.JsonParser
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import org.burnoutcrew.reorderable.ReorderableItem
 import org.burnoutcrew.reorderable.detectReorder
 import org.burnoutcrew.reorderable.rememberReorderableLazyListState
 import org.burnoutcrew.reorderable.reorderable
-
-//import sh.calvin.reorderable.ReorderableItem
-//import sh.calvin.reorderable.*
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonObject
 
 // drawer swipe 제한을 위한 변수
 var swipeState = true
@@ -121,35 +128,60 @@ data class drawer_item(
 )
 
 // 서버로 부터 받은 데이터 가공
-private fun process_date(): List<main_item> {
-    return listOf<main_item>(
-        main_item(
-            "제목",
-            "여행지",
-            "1.7",
-            "(120)",
-            "서울특별시 가나구 나다동",
-            "대충 설명",
-            listOf(
-                "https://i.namu.wiki/i/FFtbPbO7JwsuLVt7-QwnhSSOhBVhylDgNulplfT-r7bQPhpQGISTPQmGRJIU9vrHMQOPiuLEFo2IcD1GfbfSbFfti4eeJjy2mEhcQH7zKJa2eeTx06fGe7YZL7wMaXtrlNFZ1mtPJdQPQ0Vx5CEJ9g.webp",
-                "https://i.namu.wiki/i/bz5xFDUpOKn3HOb7cQo-UX2dEA5dRQls5PN9ZlPQSSY7R9ovCn0aWgJjrkJO7X8X53OVlSYc6o9v12KF5nyUJIUi43nWcDRdpxiMhlUNBm6y3052KOHWhVz63nymOV0HRDwemfnaSFpeuqiuuuuGFA.webp",
-                "https://i.namu.wiki/i/JaxZxaiYd-07iyjOUZnpBKxeeOHMATvpVySNcU_0cne3QHuNp-4S_2bnUaqsWX_07Y7ad9_OiCCHltITT6NXd1cM4ML4psaUrm3ZnEtGJIFyDzwx8U2HkcQR6akgMSqhU9jL9vog3BlDePZHhwBeyA.webp"
-            )
-        ),
-        main_item(
-            "제목2",
-            "여행지",
-            "3.8",
-            "(120)",
-            "서울특별시 일이구 삼사동",
-            "대충 설명일듯",
-            listOf(
-                "https://i.namu.wiki/i/FFtbPbO7JwsuLVt7-QwnhSSOhBVhylDgNulplfT-r7bQPhpQGISTPQmGRJIU9vrHMQOPiuLEFo2IcD1GfbfSbFfti4eeJjy2mEhcQH7zKJa2eeTx06fGe7YZL7wMaXtrlNFZ1mtPJdQPQ0Vx5CEJ9g.webp",
-                "https://i.namu.wiki/i/bz5xFDUpOKn3HOb7cQo-UX2dEA5dRQls5PN9ZlPQSSY7R9ovCn0aWgJjrkJO7X8X53OVlSYc6o9v12KF5nyUJIUi43nWcDRdpxiMhlUNBm6y3052KOHWhVz63nymOV0HRDwemfnaSFpeuqiuuuuGFA.webp",
-                "https://i.namu.wiki/i/JaxZxaiYd-07iyjOUZnpBKxeeOHMATvpVySNcU_0cne3QHuNp-4S_2bnUaqsWX_07Y7ad9_OiCCHltITT6NXd1cM4ML4psaUrm3ZnEtGJIFyDzwx8U2HkcQR6akgMSqhU9jL9vog3BlDePZHhwBeyA.webp"
-            )
-        )
-    )
+private fun process_date(query:String, filter:String ,viewModel: NavViewModel): List<main_item> {
+
+    var result:List<main_item> = emptyList()
+
+    CoroutineScope(Dispatchers.Main).launch {
+        var output = CoroutineScope(Dispatchers.IO).async {
+            fetchNearPlace(query, filter, viewModel)
+//            fetchPlaceFromQuery(query, viewModel)
+        }.await()
+        val buffer = output.toString()
+        if (viewModel.fetchReturn != null) {
+            Log.d("반환값", viewModel.fetchReturn.toString())
+            // TODO:
+            // 여기서 파싱 조져야함
+            // 서버에서 여러개 리턴 받는 거 먼저 해야함
+            val sub = JsonParser.parseString(viewModel.fetchReturn.toString())
+
+            Log.d("반환값a", sub.toString())
+            result = emptyList()
+        } else {
+            result =  emptyList()
+        }
+    }
+
+    return result
+
+//    return listOf<main_item>(
+//        main_item(
+//            "제목",
+//            "여행지",
+//            "1.7",
+//            "(120)",
+//            "서울특별시 가나구 나다동",
+//            "대충 설명",
+//            listOf(
+//                "https://i.namu.wiki/i/FFtbPbO7JwsuLVt7-QwnhSSOhBVhylDgNulplfT-r7bQPhpQGISTPQmGRJIU9vrHMQOPiuLEFo2IcD1GfbfSbFfti4eeJjy2mEhcQH7zKJa2eeTx06fGe7YZL7wMaXtrlNFZ1mtPJdQPQ0Vx5CEJ9g.webp",
+//                "https://i.namu.wiki/i/bz5xFDUpOKn3HOb7cQo-UX2dEA5dRQls5PN9ZlPQSSY7R9ovCn0aWgJjrkJO7X8X53OVlSYc6o9v12KF5nyUJIUi43nWcDRdpxiMhlUNBm6y3052KOHWhVz63nymOV0HRDwemfnaSFpeuqiuuuuGFA.webp",
+//                "https://i.namu.wiki/i/JaxZxaiYd-07iyjOUZnpBKxeeOHMATvpVySNcU_0cne3QHuNp-4S_2bnUaqsWX_07Y7ad9_OiCCHltITT6NXd1cM4ML4psaUrm3ZnEtGJIFyDzwx8U2HkcQR6akgMSqhU9jL9vog3BlDePZHhwBeyA.webp"
+//            )
+//        ),
+//        main_item(
+//            "제목2",
+//            "여행지",
+//            "3.8",
+//            "(120)",
+//            "서울특별시 일이구 삼사동",
+//            "대충 설명일듯",
+//            listOf(
+//                "https://i.namu.wiki/i/FFtbPbO7JwsuLVt7-QwnhSSOhBVhylDgNulplfT-r7bQPhpQGISTPQmGRJIU9vrHMQOPiuLEFo2IcD1GfbfSbFfti4eeJjy2mEhcQH7zKJa2eeTx06fGe7YZL7wMaXtrlNFZ1mtPJdQPQ0Vx5CEJ9g.webp",
+//                "https://i.namu.wiki/i/bz5xFDUpOKn3HOb7cQo-UX2dEA5dRQls5PN9ZlPQSSY7R9ovCn0aWgJjrkJO7X8X53OVlSYc6o9v12KF5nyUJIUi43nWcDRdpxiMhlUNBm6y3052KOHWhVz63nymOV0HRDwemfnaSFpeuqiuuuuGFA.webp",
+//                "https://i.namu.wiki/i/JaxZxaiYd-07iyjOUZnpBKxeeOHMATvpVySNcU_0cne3QHuNp-4S_2bnUaqsWX_07Y7ad9_OiCCHltITT6NXd1cM4ML4psaUrm3ZnEtGJIFyDzwx8U2HkcQR6akgMSqhU9jL9vog3BlDePZHhwBeyA.webp"
+//            )
+//        )
+//    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -179,7 +211,11 @@ fun detailedScheduleMain(navController: NavHostController, navViewModel:NavViewM
         mutableStateOf(listOf<main_item>())
     }
 
-    val data_list = process_date()
+    var data_list by remember {
+        mutableStateOf(listOf<main_item>())
+    }
+
+
 
 
     // custom bottom sheet; drawer
@@ -410,7 +446,9 @@ fun detailedScheduleMain(navController: NavHostController, navViewModel:NavViewM
                                 Icon(
                                     painter = painterResource(id = R.drawable.ljw_outline_search_96),
                                     contentDescription = "",
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(24.dp).clickable {
+                                        data_list = process_date(search_words, "restaurant", navViewModel)
+                                    }
                                 )
                             }
                         }
@@ -427,6 +465,7 @@ fun detailedScheduleMain(navController: NavHostController, navViewModel:NavViewM
                     LazyColumn(verticalArrangement = Arrangement.spacedBy(27.dp)) {
                         // 커스텀 아이템 들어가기
                         itemsIndexed(items = data_list) { index, it ->
+                            Text("as")
                             mainItem(it = it)
                             Spacer(modifier = Modifier.height(27.dp))
                             if (index < data_list.lastIndex) {
@@ -437,16 +476,10 @@ fun detailedScheduleMain(navController: NavHostController, navViewModel:NavViewM
                             }
                         }
                     }
-
-
                 }
-
-
             }
         }
     }
-
-
 }
 
 @Composable

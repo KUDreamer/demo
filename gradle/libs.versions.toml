@@ -20,6 +20,8 @@ loggingInterceptor = "5.0.0-alpha.14"
 roomCompiler = "2.7.0-alpha03"
 roomKtxVersion = "2.7.0-alpha03"
 coreAnimation = "1.0.0"
+kotlinxCoroutinesAndroid = "1.9.0-RC"
+jsoup = "1.17.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -48,6 +50,8 @@ logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-intercep
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "roomCompiler" }
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtxVersion" }
 androidx-core-animation = { group = "androidx.core", name = "core-animation", version.ref = "coreAnimation" }
+kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinxCoroutinesAndroid" }
+jsoup = { group = "org.jsoup", name = "jsoup", version.ref = "jsoup" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
