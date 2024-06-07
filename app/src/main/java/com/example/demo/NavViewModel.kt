@@ -1,3 +1,26 @@
+/*
+view model
+
+1. data model_view => 하나의 여행지 정보 (이름, 사진, 영업시간 정보 등등)
+
+- html
+- result (address, phonenumber, name, openinghours, photo, rating) - openinghours (open_now, periods, weekday)
+periods - (close, open) - day, time
+- status (영업 o x )
+2.
+
+start date<string> - 여행 시작날짜
+end date<string> - 여행 끝나는 날짜
+current date<string> - 현재 여행중인 날짜
+dateModels<map <string,list<datamodel_view>> >
+
+날짜를 key로 datamodel list를 담는 list
+날짜 별로 여러가지 datamodel(하나의 여행지, 식당) 을 담음
+ */
+
+
+
+
 package com.example.demo
 
 import androidx.lifecycle.LiveData
