@@ -29,56 +29,63 @@ import com.example.demo.Routes
 import com.example.demo.fetchPlaceFromQuery
 import kotlin.random.Random
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import kotlinx.coroutines.launch
 
 
-data class ListInfo(var name: String, var img: String, var che: Boolean)
+data class ListInfo(var name: String, var img: String, var address: String , var rate: Double )
 
 private suspend fun respone_text(block: MutableState<ListInfo>, searchText: String, navViewModel: NavViewModel) {
-    println("aaaaaaaaaaaaaaa")
+    //println("aaaaaaaaaaaaaaa")
 
     fetchPlaceFromQuery(searchText, navViewModel)
 
     var json_s = navViewModel.fetchReturn
     //println(json_s)
     if (json_s == null) {
-        json_s = "{candidates: [{formatted_address: 대한민국 서울특별시 광진구 자양제3동 1,name:타코벨 스타시티,photos: [{height: 2592.0,html_attributions: [<a href=\"https://maps.google.com/maps/contrib/100376991195073872164\">Sean Heungsun Lim</a>],photo_reference: AUGGfZmI8hJEypyUy8_62oXgY83oWKEY3zGMMg2l-4X2kfINWAeL1xxskwDshpm0cRFI2Shm73AKbGp2-I-vRKOqoFHjWFlwKZ7uNyQqAAXy8VqNs9U-lA9koHkIvJyRHcMH8vDRUR2GKSF08Ml_CsX_Dsi-Hqkw5RUZCRxp5n4enBuXoDax,width: 4608.0 }],rating: 3.8 }],status: OK }"
+        json_s = "{candidates=[{formatted_address=대한민국 서울특별시 광진구 화양동 48-25, name=함밝×파스타리코, photos=[{height=2250.0, html_attributions=[<a href=\"https://maps.google.com/maps/contrib/114142466491985332874\">Mavis Gyamfi</a>], photo_reference=AUGGfZkdWoso1lvi1-eYzq7W1m3ZnCw8G9FqcCCK_fH6S0XPZ4cFC9j8PWC-BH_U2MXT_K-yrwGTgnVPYqphVF_8F2PeeqLSGqVRCdAm6o8Ce4oXhzcQPDK2ClnwJHXv2SAOUP_POjD_1DEX6GHkzpOlwjjCmHdPTHoAWDwXrO2JChhmWh-x, width=4000.0}], rating=5.0}], status=OK}"
     }
 
     try {
-        // JSON 응답 문자열에서 데이터 추출
-        val candidateRegex = """candidates\s*[:=]\s*\[(\{.*?\})\]""".toRegex()
-        val nameRegex = """name\s*[:=]\s*["']?([^"'\s]+)["']?""".toRegex()
-        val addressRegex = """formatted_address\s*[:=]\s*["']?([^"'\s]+)["']?""".toRegex()
-        val photoRegex = """photo_reference\s*[:=]\s*["']?([^"'\s]+)["']?""".toRegex()
-        val ratingRegex = """rating\s*[:=]\s*([0-9.]+)""".toRegex()
+        val addressRegex = "formatted_address=([^,]+)".toRegex()
+        val addressMatch = addressRegex.find(json_s)
+        val formattedAddress = addressMatch?.groups?.get(1)?.value ?: "No Address"
+        // 예시 주소
+        //대한민국 서울특별시 성동구 성수2가제3동 아차산로17길 11
+       println(formattedAddress)
+        // Extract name
+        val nameRegex = "name=([^,]+)".toRegex()
+        val nameMatch = nameRegex.find(json_s)
+        val name = nameMatch?.groups?.get(1)?.value ?: "No Name"
+        println(name)
+        //예시 이름
+        //앳모스피어 같은 그냥 이름
+        // Extract photo URL (photo_reference)
+        val photoRegex = "photo_reference=([^,}]+)".toRegex()
+        val photoMatch = photoRegex.find(json_s)
+        val photoUrl = "https://maps.googleapis.com/maps/api/place/photo?maxheight=400&&maxwidth=400&photoreference=" + (photoMatch?.groups?.get(1)?.value ?: "NoPhotoReference")
+        println(photoUrl)
+        // 예시 이미지
+        // https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=AUGGfZnxOls39TwAZ4rMjkXdrsnpRQeFXOSU5FrsFO-xV6cBjTvmNV2DL-1oORfSqfas7Ck3U-HtahScWyFJcCGqg5xkOuqiFSYS9Ti829KDwnzVCovleGPHl1dLgRfEEjMKT3Bf3W87EixNTyCE9IxbwQ7VIr3Ig8ZYPxj-ixEiMgIVvbZ9
+        // 이게 맞는지는 모르겠지만 일단 이리, 일단 이미지 너무 크지않게 400*400으로
+        val ratingRegex = "rating=([\\d.]+)".toRegex()
+        val ratingMatch = ratingRegex.find(json_s)
+        val rating = ratingMatch?.groups?.get(1)?.value?.toDouble() ?: 0.0
+        println(rating)
+        //예시 별점 4.5 같이 소스점 한자리까지
 
-        val candidateMatch = candidateRegex.find(json_s)
-        val candidate = candidateMatch?.groupValues?.get(1) ?: ""
+         //Update the block with parsed data
+        block.value = ListInfo(
+            name = name,
+            img = photoUrl,
+            address = formattedAddress,
+            rate = rating
+        )
 
-        val nameMatch = nameRegex.find(candidate)
-        val name = nameMatch?.groupValues?.get(1)?.trim() ?: "Unknown"
-
-        val addressMatch = addressRegex.find(candidate)
-        val address = addressMatch?.groupValues?.get(1)?.trim() ?: "Unknown"
-
-        val photoMatch = photoRegex.find(candidate)
-        val photoReference = photoMatch?.groupValues?.get(1)?.trim()
-
-        val ratingMatch = ratingRegex.find(candidate)
-        val rating = ratingMatch?.groupValues?.get(1)?.trim() ?: "Unknown"
-
-        val photoUrl = photoReference?.let { "https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=$it&key=api_key" } ?: ""
-
-        block.value = ListInfo(name = name, img = photoUrl, che = false)
-
-        println("Name: $name")
-        println("Address: $address")
-        println("Photo URL: $photoUrl")
-        println("Rating: $rating")
 
     } catch (e: Exception) {
-        println("bbbbbbbbbbb")
+        //println("bbbbbbbbbbb")
         e.printStackTrace()
         Log.e("JSONParsingError", "Error parsing JSON response", e)
     }
@@ -100,7 +107,12 @@ fun modifySearchText(original: String, isis: Int): String {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun FieldTop(navController: NavHostController, isActive: Boolean, blocks: List<MutableState<ListInfo>>, navViewModel: NavViewModel) {
+private fun FieldTop(
+    navController: NavHostController,
+    isActive: Boolean,
+    blocks: List<MutableState<ListInfo>>,
+    navViewModel: NavViewModel
+) {
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
     val fieldTopHeight = screenHeight / 8  // 화면 높이의 1/8
@@ -147,15 +159,15 @@ private fun FieldTop(navController: NavHostController, isActive: Boolean, blocks
                 Text("검색", style = androidx.compose.ui.text.TextStyle(color = Color.Gray))
             },
             keyboardOptions = KeyboardOptions.Default.copy(
-                imeAction = ImeAction.Search
+                imeAction = ImeAction.Search,
+                keyboardType = KeyboardType.Text
             ),
             keyboardActions = KeyboardActions(
                 onSearch = {
-
                     coroutineScope.launch {
                         for (i in 0 until 8) {
-                            val modifiedSearchText = modifySearchText(searchText,i)
-                            respone_text(blocks[i], modifiedSearchText, navViewModel)
+                            val modifiedSearchText = modifySearchText(searchText, i)
+                            respone_text(blocks[i], searchText, navViewModel)
                         }
                     }
                 }
@@ -292,7 +304,7 @@ fun RestaurantList(navController: NavHostController, navViewModel: NavViewModel)
     val blocks = remember {
         List(8) {
             val randomFood = foods[Random.nextInt(foods.size)]
-            mutableStateOf(ListInfo(name = randomFood, img = "img_$randomFood.png", che = Random.nextBoolean()))
+            mutableStateOf(ListInfo(name = randomFood, img = "img_$randomFood.png", address = "",rate=0.0))
         }
     }
 
@@ -312,11 +324,6 @@ fun RestaurantList(navController: NavHostController, navViewModel: NavViewModel)
 
     // 체크된 항목의 수를 추적
     val checkedCount = remember { mutableStateOf(0) }
-
-    // 체크 상태 업데이트 함수
-    fun updateCheckState() {
-        checkedCount.value = blocks.count { it.value.che }
-    }
 
     // 사용자 인터페이스
     Column(
