@@ -52,7 +52,6 @@ data class RestaurantData(
 @OptIn(ExperimentalMaterial3Api::class)
 fun DetailedRestaurant(navController: NavHostController, navViewModel: NavViewModel = viewModel()) {
     Log.d("DetailedRestaurant", "Composable function started")
-
     // 초기 상태 설정
     var restaurantData by remember { mutableStateOf<RestaurantData?>(null) }
     val context = LocalContext.current
