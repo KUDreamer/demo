@@ -104,7 +104,7 @@ fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel, n
                     }
                 },
                 actions = {
-                    IconButton(onClick = { navController.navigate(Routes.AddSchedule.route) }) {
+                    IconButton(onClick = { navController.navigate(Routes.DetailedSchedule.route) }) {
                         Icon(
                             imageVector = Icons.Outlined.Create,
                             contentDescription = "edit",

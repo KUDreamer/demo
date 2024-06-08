@@ -31,6 +31,7 @@ import kotlin.random.Random
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import coil.compose.AsyncImage
 import com.example.demo.fetchgetPlaceInfo
 import kotlinx.coroutines.launch
 import com.example.demo.Result_view
@@ -93,8 +94,10 @@ private suspend fun respone_text(block: MutableState<ListInfo>, searchText: Stri
         fetchgetPlaceInfo(photoUrl,200 ,navViewModel)
         var url_pp = navViewModel.fetchReturn
         println(url_pp)
+        Log.d("testtest", photoUrl)
 
-         //Update the block with parsed data
+
+        //Update the block with parsed data
         block.value = ListInfo(
             name = name,
             img = photoUrl,

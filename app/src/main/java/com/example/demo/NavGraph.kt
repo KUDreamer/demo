@@ -15,6 +15,7 @@ import androidx.navigation.compose.composable
 import com.example.demo.db.TripViewModel
 import com.example.demo.screens.AddSchedule
 import com.example.demo.screens.Date
+import com.example.demo.screens.DetailedRestaurant
 //import com.example.demo.screens.DetailedRestaurant
 import com.example.demo.screens.MainScreen
 import com.example.demo.screens.MyTrip
@@ -52,8 +53,8 @@ fun NavGraph(navController: NavHostController, navViewModel: NavViewModel, tripV
     val trip by tripViewModel.currentTrip.collectAsState()
 
     val startScreen = if (trip != null) {
-//        Routes.MainScreen.route
-        Routes.DetailedSchedule.route
+        Routes.MainScreen.route
+//        Routes.DetailedSchedule.route
     } else {
         Routes.MyTrip.route
     }
@@ -71,7 +72,7 @@ fun NavGraph(navController: NavHostController, navViewModel: NavViewModel, tripV
             }
 
             composable(route = Routes.DetailedRestaurant.route) {
-//                DetailedRestaurant(navController, navViewModel)
+                DetailedRestaurant(navController, navViewModel)
             }
 
             composable(route = Routes.MainScreen.route) {

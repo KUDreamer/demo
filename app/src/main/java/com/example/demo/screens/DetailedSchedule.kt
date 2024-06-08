@@ -508,18 +508,18 @@ fun detailedScheduleMain(navController: NavHostController, navViewModel:NavViewM
                         Row() {
                             // 필터
 
-                            for (it in filter_list) {
-                                filterItems(it = it) {
-                                    if(it.text == "restaurant") {
-                                        filter_list[0].isChecked = true
-                                        filter_list[1].isChecked = false
-                                    }
-                                    else {
-                                        filter_list[0].isChecked = false
-                                        filter_list[1].isChecked = true
-                                    }
-                                }
-                            }
+//                            for (it in filter_list) {
+//                                filterItems(it = it) {
+//                                    if(it.text == "restaurant") {
+//                                        filter_list[0].isChecked = true
+//                                        filter_list[1].isChecked = false
+//                                    }
+//                                    else {
+//                                        filter_list[0].isChecked = false
+//                                        filter_list[1].isChecked = true
+//                                    }
+//                                }
+//                            }
 
                         }
                     }
