@@ -167,7 +167,7 @@ fun MainContent(
                             contentDescription = "음식 이미지",
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
-                                .width(170.dp)
+                                .width(360.dp)
                                 .height(180.dp)
                                 .padding(end = 8.dp)
                         )
@@ -407,10 +407,6 @@ fun MainContent(
         }
         Button(
             onClick = {
-                val adding = navViewModel.getData()
-                if (adding != null) {
-                    navViewModel.addDataModelForDate(navViewModel.getCurrentDate().toString(), adding)
-                }
                 navController.navigate(Routes.Date.route)
             },
             modifier = Modifier
