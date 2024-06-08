@@ -66,18 +66,32 @@ data class Stop(
 
 interface ApiService {
     @GET("api/giveInfo")
-    fun getPlaceData(@Query("PLACE_ID") placeId: String): Call<ResponseBody>
+    fun getPlaceData(@Query("PLACE_ID") placeId: String): Call<Object>
 
     @FormUrlEncoded
     @POST("api/searchPlaceInfo")
-    suspend fun getPlaceFromQuery(@Field("query") query: String): Response<ResponseBody>
+    suspend fun getPlaceFromQuery(@Field("query") query: String): Response<Object>
 
     @FormUrlEncoded
     @POST("api/searchByTextInfo")
-    fun getNearPlace(@Field("query") query: String, @Field("place_type") type:String): Call<ResponseBody>
+    fun getNearPlace(@Field("query") query: String, @Field("place_type") type:String): Call<Object>
 
     @POST("api/directions")
-    fun getDirections(@Body request: Map<String, String>): Call<ResponseBody>
+    fun getDirections(@Body request: Map<String, String>): Call<Object>
+
+    @GET("api/giveInfo")
+    fun getPlaceDataNew(@Query("PLACE_ID") placeId: String): Call<ResponseBody>
+
+    @FormUrlEncoded
+    @POST("api/searchPlaceInfo")
+    suspend fun getPlaceFromQueryNew(@Field("query") query: String): Response<ResponseBody>
+
+    @FormUrlEncoded
+    @POST("api/searchByTextInfo")
+    fun getNearPlaceNew(@Field("query") query: String, @Field("place_type") type:String): Call<ResponseBody>
+
+    @POST("api/directions")
+    fun getDirectionsNew(@Body request: Map<String, String>): Call<ResponseBody>
 }
 
 object RetrofitClient {
@@ -107,18 +121,18 @@ object RetrofitClient {
 
 fun fetchPlaceData(placeId: String, viewModel: NavViewModel) {
     val call = RetrofitClient.apiService.getPlaceData(placeId)
-    call.enqueue(object : Callback<ResponseBody> {
-        override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+    call.enqueue(object : Callback<Object> {
+        override fun onResponse(call: Call<Object>, response: Response<Object>) {
             if (response.isSuccessful) {
                 val placeData = response.body()
                 Log.d("API_CALL", "Place Data: $placeData")
-                viewModel.sendFetchReturn(response.body()?.string(), viewModel)
+                viewModel.sendFetchReturn(response.body()?.toString(), viewModel)
             } else {
                 Log.e("API_CALL", "Response not successful: ${response.code()}")
             }
         }
 
-        override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+        override fun onFailure(call: Call<Object>, t: Throwable) {
             Log.e("API_CALL", "Error: ${t.message}")
         }
     })
@@ -129,7 +143,7 @@ suspend fun fetchPlaceFromQuery(query: String, viewModel: NavViewModel) {
         val response = RetrofitClient.apiService.getPlaceFromQuery(query)
         if (response.isSuccessful) {
             Log.d("API_CALL", "Place Info: ${response.body()}")
-            viewModel.sendFetchReturn(response.body()?.string(), viewModel)
+            viewModel.sendFetchReturn(response.body()?.toString(), viewModel)
         } else {
             Log.e("API_CALL", "Response not successful: ${response.code()}")
         }
@@ -140,12 +154,55 @@ suspend fun fetchPlaceFromQuery(query: String, viewModel: NavViewModel) {
 
 fun fetchNearPlace(query: String, type:String, viewModel: NavViewModel) {
     val call = RetrofitClient.apiService.getNearPlace(query, type)
+    call.enqueue(object : Callback<Object> {
+        override fun onResponse(call: Call<Object>, response: Response<Object>) {
+            if (response.isSuccessful) {
+                val nearPlace = response.body()
+                Log.d("API_CALL", "Near Place: ${nearPlace?.toString()}")
+                viewModel.sendFetchReturn(response.body()?.toString(), viewModel)
+            } else {
+                Log.e("API_CALL", "Response not successful: ${response.code()}")
+            }
+        }
+
+        override fun onFailure(call: Call<Object>, t: Throwable) {
+            Log.e("API_CALL", "Error: ${t.message}")
+        }
+    })
+}
+
+fun fetchDirections(origin: String, destination: String, viewModel: NavViewModel) {
+    val request = mapOf("origin" to origin, "destination" to destination)
+
+    val call = RetrofitClient.apiService.getDirections(request)
+    call.enqueue(object : Callback<Object> {
+        override fun onResponse(call: Call<Object>, response: Response<Object>) {
+            if (response.isSuccessful) {
+                val directions = response.body()
+                Log.d("API_CALL", "Directions: $directions")
+                viewModel.sendFetchReturn(response.body()?.toString(), viewModel)
+            } else {
+                Log.e("API_CALL", "Response not successful: ${response.code()}")
+            }
+        }
+
+        override fun onFailure(call: Call<Object>, t: Throwable) {
+            Log.e("API_CALL", "Error: ${t.message}")
+        }
+    })
+}
+
+
+
+
+fun fetchPlaceDataNew(placeId: String, viewModel: NavViewModel) {
+    val call = RetrofitClient.apiService.getPlaceDataNew(placeId)
     call.enqueue(object : Callback<ResponseBody> {
         override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
             if (response.isSuccessful) {
-                val nearPlace = response.body()
-                Log.d("API_CALL", "Near Place: ${nearPlace?.string()}")
-                viewModel.sendFetchReturn(response.body()?.string(), viewModel)
+                val placeData = response.body()
+                Log.d("API_CALL", "Place Data: $placeData")
+                viewModel.sendFetchReturnNew(response.body()?.string(), viewModel)
             } else {
                 Log.e("API_CALL", "Response not successful: ${response.code()}")
             }
@@ -157,16 +214,49 @@ fun fetchNearPlace(query: String, type:String, viewModel: NavViewModel) {
     })
 }
 
-fun fetchDirections(origin: String, destination: String, viewModel: NavViewModel) {
+suspend fun fetchPlaceFromQueryNew(query: String, viewModel: NavViewModel) {
+    try {
+        val response = RetrofitClient.apiService.getPlaceFromQueryNew(query)
+        if (response.isSuccessful) {
+            Log.d("API_CALL", "Place Info: ${response.body()}")
+            viewModel.sendFetchReturnNew(response.body()?.string(), viewModel)
+        } else {
+            Log.e("API_CALL", "Response not successful: ${response.code()}")
+        }
+    } catch (e: Exception) {
+        Log.e("API_CALL", "Error: ${e.message}")
+    }
+}
+
+fun fetchNearPlaceNew(query: String, type:String, viewModel: NavViewModel) {
+    val call = RetrofitClient.apiService.getNearPlaceNew(query, type)
+    call.enqueue(object : Callback<ResponseBody> {
+        override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+            if (response.isSuccessful) {
+                val nearPlace = response.body()
+                Log.d("API_CALL", "Near Place: ${nearPlace?.string()}")
+                viewModel.sendFetchReturnNew(response.body()?.string(), viewModel)
+            } else {
+                Log.e("API_CALL", "Response not successful: ${response.code()}")
+            }
+        }
+
+        override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+            Log.e("API_CALL", "Error: ${t.message}")
+        }
+    })
+}
+
+fun fetchDirectionsNew(origin: String, destination: String, viewModel: NavViewModel) {
     val request = mapOf("origin" to origin, "destination" to destination)
 
-    val call = RetrofitClient.apiService.getDirections(request)
+    val call = RetrofitClient.apiService.getDirectionsNew(request)
     call.enqueue(object : Callback<ResponseBody> {
         override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
             if (response.isSuccessful) {
                 val directions = response.body()
                 Log.d("API_CALL", "Directions: $directions")
-                viewModel.sendFetchReturn(response.body()?.string(), viewModel)
+                viewModel.sendFetchReturnNew(response.body()?.string(), viewModel)
             } else {
                 Log.e("API_CALL", "Response not successful: ${response.code()}")
             }

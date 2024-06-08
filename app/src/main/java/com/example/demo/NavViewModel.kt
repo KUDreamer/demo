@@ -124,6 +124,7 @@ class Result_view {
         set(value) {
             field = value
         }
+
 }
 
 // DataModel_view 클래스
@@ -150,13 +151,17 @@ class DataModel_view {
 // ViewModel class
 class NavViewModel : ViewModel() {
 
-    // 2024.06.08 이후 fetchReturn값의 형태가 조금 바뀌었습니다.
-    // 기존의 fetchReturn은 json문법을 제대로 지키지 않은 형태였습니다. e.g., location: "서울특별시"
-    // key값을 ""가 감싸는 형태로 fetchReturn값을 수정했습니다. e.g., "location": "서울특별시"
+    // fetchReturn: 구버전
+    // fetchReturnNew 새로운 버전
     var fetchReturn: String? = null
+    var fetchReturnNew: String? = null
 
     fun sendFetchReturn(output: String?, viewModel: NavViewModel) {
         viewModel.fetchReturn = output
+    }
+
+    fun sendFetchReturnNew(output: String?, viewModel: NavViewModel) {
+        viewModel.fetchReturnNew = output
     }
 
     // data model -- > api에서 가져온 데이터들이 들어가있는 view model
