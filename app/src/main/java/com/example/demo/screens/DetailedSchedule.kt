@@ -64,20 +64,29 @@ import kotlinx.coroutines.launch
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Card
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.Observer
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
+import com.example.demo.MainActivity
 import com.example.demo.NavViewModel
 import com.example.demo.Routes
 import com.example.demo.fetchNearPlace
+import com.example.demo.fetchNearPlaceNew
 import com.example.demo.fetchPlaceFromQuery
 import com.google.gson.JsonParser
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.burnoutcrew.reorderable.ReorderableItem
 import org.burnoutcrew.reorderable.detectReorder
@@ -130,58 +139,53 @@ data class drawer_item(
 // 서버로 부터 받은 데이터 가공
 private fun process_date(query:String, filter:String ,viewModel: NavViewModel): List<main_item> {
 
-    var result:List<main_item> = emptyList()
+    var result:MutableList<main_item> = listOf<main_item>().toMutableList()
+    var output:String? = null
+    viewModel.fetchResult.observe(viewModel.lifCycleOwner!!, Observer {
+        output = it
+        if (output != null) {
+            val sub = JsonParser.parseString(output.toString())
+            val jsonObject = sub.asJsonObject
 
-    CoroutineScope(Dispatchers.Main).launch {
-        var output = CoroutineScope(Dispatchers.IO).async {
-            fetchNearPlace(query, filter, viewModel)
-//            fetchPlaceFromQuery(query, viewModel)
-        }.await()
-        val buffer = output.toString()
-        if (viewModel.fetchReturn != null) {
-            Log.d("반환값", viewModel.fetchReturn.toString())
-            // TODO:
-            // 여기서 파싱 조져야함
-            // 서버에서 여러개 리턴 받는 거 먼저 해야함
-            val sub = JsonParser.parseString(viewModel.fetchReturn.toString())
+            if (jsonObject.get("status").asString == "ZERO_RESULTS") {
+                Log.d("asas", "zero_results")
+                result = listOf<main_item>().toMutableList()
+            }
+            else {
+                val resultArray = jsonObject.getAsJsonArray("results")
+                for(itt in resultArray) {
+                    Log.d("asas", "item: $itt")
+                    val ittt = itt.asJsonObject
+                    val photosArray = ittt.getAsJsonArray("photos")
+                    val photoReferences = photosArray?.map {ti->
+                        ti.asJsonObject.get("photo_reference")?.asString ?: "No Image"
+                    } ?: listOf("No Image")
 
-            Log.d("반환값a", sub.toString())
-            result = emptyList()
+                    val item = main_item(
+                        title = ittt.get("name").asString,
+                        type = filter,
+                        rate_mean = ittt.get("rating").asString,
+                        rate_num = ittt.get("user_ratings_total").asString,
+                        location = ittt.get("formatted_address").asString,
+                        details = ittt.get("types").asJsonArray.toString(),
+                        image_list = photoReferences
+                    )
+                    result.add(item)
+                }
+                Log.d("asas", "results")
+            }
         } else {
-            result =  emptyList()
+            Log.d("asas", "empty")
+            result =  listOf<main_item>().toMutableList()
         }
-    }
+
+    })
+
+    fetchNearPlaceNew(query, filter, viewModel)
+    Log.d("asas", "get fetchReturnNew")
 
     return result
 
-//    return listOf<main_item>(
-//        main_item(
-//            "제목",
-//            "여행지",
-//            "1.7",
-//            "(120)",
-//            "서울특별시 가나구 나다동",
-//            "대충 설명",
-//            listOf(
-//                "https://i.namu.wiki/i/FFtbPbO7JwsuLVt7-QwnhSSOhBVhylDgNulplfT-r7bQPhpQGISTPQmGRJIU9vrHMQOPiuLEFo2IcD1GfbfSbFfti4eeJjy2mEhcQH7zKJa2eeTx06fGe7YZL7wMaXtrlNFZ1mtPJdQPQ0Vx5CEJ9g.webp",
-//                "https://i.namu.wiki/i/bz5xFDUpOKn3HOb7cQo-UX2dEA5dRQls5PN9ZlPQSSY7R9ovCn0aWgJjrkJO7X8X53OVlSYc6o9v12KF5nyUJIUi43nWcDRdpxiMhlUNBm6y3052KOHWhVz63nymOV0HRDwemfnaSFpeuqiuuuuGFA.webp",
-//                "https://i.namu.wiki/i/JaxZxaiYd-07iyjOUZnpBKxeeOHMATvpVySNcU_0cne3QHuNp-4S_2bnUaqsWX_07Y7ad9_OiCCHltITT6NXd1cM4ML4psaUrm3ZnEtGJIFyDzwx8U2HkcQR6akgMSqhU9jL9vog3BlDePZHhwBeyA.webp"
-//            )
-//        ),
-//        main_item(
-//            "제목2",
-//            "여행지",
-//            "3.8",
-//            "(120)",
-//            "서울특별시 일이구 삼사동",
-//            "대충 설명일듯",
-//            listOf(
-//                "https://i.namu.wiki/i/FFtbPbO7JwsuLVt7-QwnhSSOhBVhylDgNulplfT-r7bQPhpQGISTPQmGRJIU9vrHMQOPiuLEFo2IcD1GfbfSbFfti4eeJjy2mEhcQH7zKJa2eeTx06fGe7YZL7wMaXtrlNFZ1mtPJdQPQ0Vx5CEJ9g.webp",
-//                "https://i.namu.wiki/i/bz5xFDUpOKn3HOb7cQo-UX2dEA5dRQls5PN9ZlPQSSY7R9ovCn0aWgJjrkJO7X8X53OVlSYc6o9v12KF5nyUJIUi43nWcDRdpxiMhlUNBm6y3052KOHWhVz63nymOV0HRDwemfnaSFpeuqiuuuuGFA.webp",
-//                "https://i.namu.wiki/i/JaxZxaiYd-07iyjOUZnpBKxeeOHMATvpVySNcU_0cne3QHuNp-4S_2bnUaqsWX_07Y7ad9_OiCCHltITT6NXd1cM4ML4psaUrm3ZnEtGJIFyDzwx8U2HkcQR6akgMSqhU9jL9vog3BlDePZHhwBeyA.webp"
-//            )
-//        )
-//    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -200,9 +204,8 @@ fun detailedScheduleMain(navController: NavHostController, navViewModel:NavViewM
     var filter_list by remember {
         mutableStateOf(
             listOf<filter_item>(
-                filter_item("여행지", false),
-                filter_item("숙소", false),
-                filter_item("식당", false)
+                filter_item("restaurant", true),
+                filter_item("tourist_attraction", false)
             )
         )
     }
@@ -211,12 +214,59 @@ fun detailedScheduleMain(navController: NavHostController, navViewModel:NavViewM
         mutableStateOf(listOf<main_item>())
     }
 
+    var updateScreen by remember {
+        mutableStateOf(1)
+    }
+
     var data_list by remember {
-        mutableStateOf(listOf<main_item>())
+        mutableStateOf(listOf<drawer_item>())
     }
 
 
 
+    val observer = Observer<String> {
+        var output:String? = null
+        var result:MutableList<main_item> = listOf<main_item>().toMutableList()
+        output = it
+        if (output != null) {
+            val sub = JsonParser.parseString(output.toString())
+            val jsonObject = sub.asJsonObject
+
+            if (jsonObject.get("status").asString == "ZERO_RESULTS") {
+                Log.d("asas", "zero_results")
+                result = listOf<main_item>().toMutableList()
+            }
+            else {
+                val resultArray = jsonObject.getAsJsonArray("results")
+                for(itt in resultArray) {
+                    Log.d("asas", "item: $itt")
+                    val ittt = itt.asJsonObject
+                    val photosArray = ittt.getAsJsonArray("photos")
+                    val photoReferences = photosArray?.map {ti->
+                        ti.asJsonObject.get("photo_reference")?.asString ?: "No Image"
+                    } ?: listOf("No Image")
+
+                    val item = main_item(
+                        title = ittt.get("name").asString,
+                        type = "restaurant",
+                        rate_mean = ittt.get("rating").asString,
+                        rate_num = ittt.get("user_ratings_total").asString,
+                        location = ittt.get("formatted_address").asString,
+                        details = ittt.get("types").asJsonArray.toString(),
+                        image_list = photoReferences
+                    )
+                    result.add(item)
+                }
+                Log.d("asas", "results")
+            }
+        } else {
+            Log.d("asas", "empty")
+            result =  listOf<main_item>().toMutableList()
+        }
+        Log.d("asas", "변경")
+        main_items = result
+    }
+    navViewModel.fetchResult.observe(LocalLifecycleOwner.current, observer)
 
     // custom bottom sheet; drawer
     val scaffoldSheetState = rememberBottomSheetScaffoldState()
@@ -245,6 +295,7 @@ fun detailedScheduleMain(navController: NavHostController, navViewModel:NavViewM
             },
             modifier = Modifier.padding(innerPadding),
             sheetContent = {
+                // bottom sheet 부분
                 Column(
                     Modifier
                         .padding(bottom = bottomPadding)
@@ -252,10 +303,6 @@ fun detailedScheduleMain(navController: NavHostController, navViewModel:NavViewM
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
 
-
-                    var data_list by remember {
-                        mutableStateOf(process_drawer_data())
-                    }
 
                     val lazyListState = rememberLazyListState()
 
@@ -291,7 +338,7 @@ fun detailedScheduleMain(navController: NavHostController, navViewModel:NavViewM
                                     ) {
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.Start,
+                                            horizontalArrangement = Arrangement.Center,
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .fillMaxSize()
@@ -313,7 +360,12 @@ fun detailedScheduleMain(navController: NavHostController, navViewModel:NavViewM
                                                 )
                                             }
                                             Spacer(modifier = Modifier.width(8.dp))
-                                            afterIcon(item = item)
+                                            afterIcon(item = item) {
+                                                var updated = data_list.toMutableList()
+                                                val subIndex = updated.find { it.id == item.id }
+                                                updated.remove(subIndex)
+                                                data_list = updated
+                                            }
                                         }
                                     }
                                 }
@@ -351,8 +403,7 @@ fun detailedScheduleMain(navController: NavHostController, navViewModel:NavViewM
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-
-
+                // main
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Spacer(modifier = Modifier.height(30.dp))
                     Column() {
@@ -446,9 +497,11 @@ fun detailedScheduleMain(navController: NavHostController, navViewModel:NavViewM
                                 Icon(
                                     painter = painterResource(id = R.drawable.ljw_outline_search_96),
                                     contentDescription = "",
-                                    modifier = Modifier.size(24.dp).clickable {
-                                        data_list = process_date(search_words, "restaurant", navViewModel)
-                                    }
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .clickable {
+                                            fetchNearPlaceNew(search_words, "restaurant", navViewModel)
+                                        }
                                 )
                             }
                         }
@@ -456,19 +509,40 @@ fun detailedScheduleMain(navController: NavHostController, navViewModel:NavViewM
                             // 필터
 
                             for (it in filter_list) {
-                                filterItems(it = it)
+                                filterItems(it = it) {
+                                    if(it.text == "restaurant") {
+                                        filter_list[0].isChecked = true
+                                        filter_list[1].isChecked = false
+                                    }
+                                    else {
+                                        filter_list[0].isChecked = false
+                                        filter_list[1].isChecked = true
+                                    }
+                                }
                             }
 
                         }
                     }
                     Spacer(modifier = Modifier.height(27.dp))
                     LazyColumn(verticalArrangement = Arrangement.spacedBy(27.dp)) {
-                        // 커스텀 아이템 들어가기
-                        itemsIndexed(items = data_list) { index, it ->
-                            Text("as")
-                            mainItem(it = it)
+                        itemsIndexed(items = main_items) { index, it ->
+                            mainItem(it = it) {
+                                val updatedItems = data_list.toMutableList()
+                                Log.d("asas", "qwqw")
+                                updatedItems.add(drawer_item(
+                                    id = data_list.lastIndex+1,
+                                    title = it.title,
+                                    type = it.type,
+                                    rate_mean = it.rate_mean,
+                                    rate_num = it.rate_num,
+                                    isPinned = false,
+                                    start_date = "",
+                                    end_date = ""
+                                ))
+                                data_list = updatedItems
+                            }
                             Spacer(modifier = Modifier.height(27.dp))
-                            if (index < data_list.lastIndex) {
+                            if (index < main_items.lastIndex) {
                                 Divider(
                                     color = colorResource(id = R.color.text_gray2),
                                     modifier = Modifier.width(342.dp)
@@ -483,7 +557,7 @@ fun detailedScheduleMain(navController: NavHostController, navViewModel:NavViewM
 }
 
 @Composable
-private fun filterItems(it: filter_item) {
+private fun filterItems(it: filter_item, onClick:()->Unit) {
     if (it.isChecked) {
         Text(
             text = it.text,
@@ -500,6 +574,7 @@ private fun filterItems(it: filter_item) {
                 )
                 .padding(8.dp, 6.dp, 8.dp, 6.dp)
                 .background(color = colorResource(id = R.color.palette1))
+                .clickable { onClick() }
         )
     } else {
         Text(
@@ -517,12 +592,13 @@ private fun filterItems(it: filter_item) {
                 )
                 .padding(8.dp, 6.dp, 8.dp, 6.dp)
                 .background(color = Color.White)
+                .clickable { onClick() }
         )
     }
 }
 
 @Composable
-private fun mainItem(it: main_item) {
+private fun mainItem(it: main_item, onClick:()->Unit) {
     // title, type, location, details, images
 //    val title = "제목 예시"
 //    val type = "타입 예시"
@@ -602,26 +678,26 @@ private fun mainItem(it: main_item) {
                     fontFamily = pretendard_family,
                     modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 4.dp)
                 )
-                Text(
-                    text = details,
-                    fontWeight = FontWeight.W100,
-                    fontSize = 12.sp,
-                    fontFamily = pretendard_family
-                )
+//                Text(
+//                    text = details,
+//                    fontWeight = FontWeight.W100,
+//                    fontSize = 12.sp,
+//                    fontFamily = pretendard_family
+//                )
             }
             Icon(
                 painter = painterResource(id = R.drawable.ljw_outline_add_circle_outline_96),
                 contentDescription = "",
                 tint = colorResource(id = R.color.palette1),
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(48.dp).clickable { onClick() }
             )
         }
 
-//        LazyRow() { // 이미지 들어가는 부분
-//            items(image_list) { it ->
-//                AsyncImage(model = it, contentDescription = "")
-//            }
-//        }
+        LazyRow() { // 이미지 들어가는 부분
+            items(image_list) {
+                AsyncImage(model = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${it}&key=AIzaSyAOWi8i0eZwjY2IXYe9-SCQNUdOE5dJcec", contentDescription = "")
+            }
+        }
 
     }
 }
@@ -727,19 +803,19 @@ private fun drawerItems(it: drawer_item) {
             }
         }
 
-        if (it.isPinned) {
-            image_id = R.drawable.ljw_baseline_push_pin_96
-        } else {
-            image_id = R.drawable.ljw_outline_push_pin_96
-        }
+//        if (it.isPinned) {
+//            image_id = R.drawable.ljw_baseline_push_pin_96
+//        } else {
+//            image_id = R.drawable.ljw_outline_push_pin_96
+//        }
 
         Spacer(modifier = Modifier.size(18.dp))
-        Icon(
-            painter = painterResource(id = image_id),
-            contentDescription = "",
-            tint = colorResource(id = R.color.palette1),
-            modifier = Modifier.size(32.dp)
-        )
+//        Icon(
+//            painter = painterResource(id = image_id),
+//            contentDescription = "",
+//            tint = colorResource(id = R.color.palette1),
+//            modifier = Modifier.size(32.dp)
+//        )
         Spacer(modifier = Modifier.size(18.dp))
         Icon(
             painter = painterResource(id = R.drawable.ljw_baseline_remove_circle_outline_96),
@@ -751,7 +827,7 @@ private fun drawerItems(it: drawer_item) {
 }
 
 @Composable
-private fun afterIcon(item: drawer_item) {
+private fun afterIcon(item: drawer_item, onClick:()->Unit) {
     val image_id: Int
     Spacer(modifier = Modifier.width(4.dp))
     Column(modifier = Modifier.width(244.dp)) {
@@ -806,17 +882,17 @@ private fun afterIcon(item: drawer_item) {
     }
 
     Spacer(modifier = Modifier.size(18.dp))
-    Icon(
-        painter = painterResource(id = image_id),
-        contentDescription = "",
-        tint = colorResource(id = R.color.palette1),
-        modifier = Modifier.size(32.dp)
-    )
+//    Icon(
+//        painter = painterResource(id = image_id),
+//        contentDescription = "",
+//        tint = colorResource(id = R.color.palette1),
+//        modifier = Modifier.size(32.dp)
+//    )
     Spacer(modifier = Modifier.size(18.dp))
     Icon(
         painter = painterResource(id = R.drawable.ljw_baseline_remove_circle_outline_96),
         contentDescription = "",
         tint = colorResource(id = R.color.palette1),
-        modifier = Modifier.size(48.dp)
+        modifier = Modifier.size(48.dp).clickable { onClick() }
     )
 }

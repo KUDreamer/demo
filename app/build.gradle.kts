@@ -69,7 +69,6 @@ dependencies {
     implementation(libs.room.ktx)
     implementation(libs.androidx.core.animation)
     implementation(libs.kotlinx.coroutines.android)
-    implementation(libs.jsoup)
     kapt(libs.androidx.room.compiler)
     implementation(libs.reorderable)
     implementation(libs.gson)

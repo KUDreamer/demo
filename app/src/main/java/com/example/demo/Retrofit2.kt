@@ -201,8 +201,13 @@ fun fetchPlaceDataNew(placeId: String, viewModel: NavViewModel) {
         override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
             if (response.isSuccessful) {
                 val placeData = response.body()
-                Log.d("API_CALL", "Place Data: $placeData")
-                viewModel.sendFetchReturnNew(response.body()?.string(), viewModel)
+                var output:String? = placeData?.string()
+                Log.d("API_CALL", "Place Data: $output")
+                if (output == null) {
+                    output = "null"
+                }
+                viewModel.sendFetchReturnNew(output, viewModel)
+//                viewModel.sendFetchReturnNew(response.body()?.string(), viewModel)
             } else {
                 Log.e("API_CALL", "Response not successful: ${response.code()}")
             }
@@ -218,8 +223,13 @@ suspend fun fetchPlaceFromQueryNew(query: String, viewModel: NavViewModel) {
     try {
         val response = RetrofitClient.apiService.getPlaceFromQueryNew(query)
         if (response.isSuccessful) {
-            Log.d("API_CALL", "Place Info: ${response.body()}")
-            viewModel.sendFetchReturnNew(response.body()?.string(), viewModel)
+            val placeInfo = response.body()
+            var output:String? = placeInfo?.string()
+            Log.d("API_CALL", "Place Info: ${output}")
+            if (output == null) {
+                output = "null"
+            }
+            viewModel.sendFetchReturnNew(output, viewModel)
         } else {
             Log.e("API_CALL", "Response not successful: ${response.code()}")
         }
@@ -234,8 +244,12 @@ fun fetchNearPlaceNew(query: String, type:String, viewModel: NavViewModel) {
         override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
             if (response.isSuccessful) {
                 val nearPlace = response.body()
-                Log.d("API_CALL", "Near Place: ${nearPlace?.string()}")
-                viewModel.sendFetchReturnNew(response.body()?.string(), viewModel)
+                var output:String? = nearPlace?.string()
+                Log.d("API_CALL", "Near Place: ${output}")
+                if (output == null) {
+                    output = "null"
+                }
+                viewModel.sendFetchReturnNew(output, viewModel)
             } else {
                 Log.e("API_CALL", "Response not successful: ${response.code()}")
             }
@@ -255,8 +269,12 @@ fun fetchDirectionsNew(origin: String, destination: String, viewModel: NavViewMo
         override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
             if (response.isSuccessful) {
                 val directions = response.body()
-                Log.d("API_CALL", "Directions: $directions")
-                viewModel.sendFetchReturnNew(response.body()?.string(), viewModel)
+                var output:String? = directions?.string()
+                Log.d("API_CALL", "Directions: $output")
+                if (output == null) {
+                    output = "null"
+                }
+                viewModel.sendFetchReturnNew(output, viewModel)
             } else {
                 Log.e("API_CALL", "Response not successful: ${response.code()}")
             }
