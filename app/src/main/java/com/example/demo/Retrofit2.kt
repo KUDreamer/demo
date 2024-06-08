@@ -24,7 +24,9 @@ import retrofit2.http.Query
 data class PlaceInfo(
     val result: Result
 )
-
+data class PlaceInfoA(
+    val photo: String
+)
 data class Result(
     val name: String?,
     val formatted_address: String?,
@@ -74,7 +76,7 @@ interface ApiService {
 
     @FormUrlEncoded
     @POST("api/searchByTextInfo")
-    fun getNearPlace(@Field("query") query: String, @Field("place_type") type:String): Call<Object>
+    fun getNearPlace(@Field("query") query: String, @Field("place_type") type: String): Call<Object>
 
     @POST("api/directions")
     fun getDirections(@Body request: Map<String, String>): Call<Object>
@@ -87,15 +89,18 @@ interface ApiService {
     suspend fun getPlaceFromQueryNew(@Field("query") query: String): Response<ResponseBody>
 
     @FormUrlEncoded
+    @POST("api/searchPlaceInfo")
+    suspend fun getPlaceInfo(@Field("query") query: String, @Field("size") size: Int): Response<PlaceInfoA>
+
+    @FormUrlEncoded
     @POST("api/searchByTextInfo")
-    fun getNearPlaceNew(@Field("query") query: String, @Field("place_type") type:String): Call<ResponseBody>
+    fun getNearPlaceNew(@Field("query") query: String, @Field("place_type") type: String): Call<ResponseBody>
 
     @POST("api/directions")
     fun getDirectionsNew(@Body request: Map<String, String>): Call<ResponseBody>
 }
 
 object RetrofitClient {
-    // http://10.0.2.2:8080/ <= android studio의 localhost
     private const val BASE_URL = "http://10.0.2.2:8080/"
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
@@ -106,7 +111,7 @@ object RetrofitClient {
         .addInterceptor(loggingInterceptor)
         .build()
 
-    val gson : Gson = GsonBuilder()
+    val gson: Gson = GsonBuilder()
         .setLenient()
         .create()
 
@@ -149,6 +154,31 @@ suspend fun fetchPlaceFromQuery(query: String, viewModel: NavViewModel) {
         }
     } catch (e: Exception) {
         Log.e("API_CALL", "Error: ${e.message}")
+    }
+}
+
+suspend fun fetchgetPlaceInfo(query: String, size: Int, viewModel: NavViewModel) {
+    try {
+        // API 호출
+        val response = RetrofitClient.apiService.getPlaceInfo(query, size)
+
+        // 응답이 성공적인 경우
+        if (response.isSuccessful) {
+            val placeInfoA = response.body() // 이미 변환된 PlaceInfo 객체를 얻음
+            if (placeInfoA != null) {
+                // 데이터를 ViewModel에 전달
+                viewModel.sendFetchReturn(placeInfoA.toString(), viewModel)
+                Log.d("API_CALL", "Place Info: $placeInfoA")
+            } else {
+                Log.e("API_CALL", "Response body is null")
+            }
+        } else {
+            // 성공적이지 않은 응답 코드 처리
+            Log.e("API_CALL", "Response not successful: ${response.code()} - ${response.errorBody()?.string()}")
+        }
+    } catch (e: Exception) {
+        // 예외 처리 및 로깅
+        Log.e("API_CALL", "Error: ${e.message}", e)
     }
 }
 
