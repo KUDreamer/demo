@@ -71,7 +71,9 @@ private suspend fun respone_text(block: MutableState<ListInfo>, searchText: Stri
         val photoRegex = "photo_reference=([^,}]+)".toRegex()
         val photoMatch = photoRegex.find(json_s)
         val photoUrl = (photoMatch?.groups?.get(1)?.value ?: "NoPhotoReference")
-        //println(photoUrl)
+        val photoUrlA = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=$photoUrl&key=AIzaSyAOWi8i0eZwjY2IXYe9-SCQNUdOE5dJcec"
+        println(photoUrl)
+        println(photoUrlA)
         // 예시 이미지
         // https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=AUGGfZnxOls39TwAZ4rMjkXdrsnpRQeFXOSU5FrsFO-xV6cBjTvmNV2DL-1oORfSqfas7Ck3U-HtahScWyFJcCGqg5xkOuqiFSYS9Ti829KDwnzVCovleGPHl1dLgRfEEjMKT3Bf3W87EixNTyCE9IxbwQ7VIr3Ig8ZYPxj-ixEiMgIVvbZ9
         // 이게 맞는지는 모르겠지만 일단 이리, 일단 이미지 너무 크지않게 400*400으로
@@ -100,7 +102,7 @@ private suspend fun respone_text(block: MutableState<ListInfo>, searchText: Stri
         //Update the block with parsed data
         block.value = ListInfo(
             name = name,
-            img = photoUrl,
+            img = photoUrlA,
             address = formattedAddress,
             rate = rating
         )
