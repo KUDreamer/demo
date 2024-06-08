@@ -31,6 +31,7 @@ import kotlin.random.Random
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import com.example.demo.fetchgetPlaceInfo
 import kotlinx.coroutines.launch
 
 
@@ -43,7 +44,7 @@ private suspend fun respone_text(block: MutableState<ListInfo>, searchText: Stri
     fetchPlaceFromQuery(searchText, navViewModel)
 
     var json_s = navViewModel.fetchReturn
-    //println(json_s)
+    println(json_s)
     if (json_s == null) {
         json_s = "{candidates=[{formatted_address=대한민국 서울특별시 광진구 화양동 48-25, name=함밝×파스타리코, photos=[{height=2250.0, html_attributions=[<a href=\"https://maps.google.com/maps/contrib/114142466491985332874\">Mavis Gyamfi</a>], photo_reference=AUGGfZkdWoso1lvi1-eYzq7W1m3ZnCw8G9FqcCCK_fH6S0XPZ4cFC9j8PWC-BH_U2MXT_K-yrwGTgnVPYqphVF_8F2PeeqLSGqVRCdAm6o8Ce4oXhzcQPDK2ClnwJHXv2SAOUP_POjD_1DEX6GHkzpOlwjjCmHdPTHoAWDwXrO2JChhmWh-x, width=4000.0}], rating=5.0}], status=OK}"
     }
@@ -54,37 +55,41 @@ private suspend fun respone_text(block: MutableState<ListInfo>, searchText: Stri
         val formattedAddress = addressMatch?.groups?.get(1)?.value ?: "No Address"
         // 예시 주소
         //대한민국 서울특별시 성동구 성수2가제3동 아차산로17길 11
-       println(formattedAddress)
+       //println(formattedAddress)
         // Extract name
         val nameRegex = "name=([^,]+)".toRegex()
         val nameMatch = nameRegex.find(json_s)
         val name = nameMatch?.groups?.get(1)?.value ?: "No Name"
-        println(name)
+        //println(name)
         //예시 이름
         //앳모스피어 같은 그냥 이름
         // Extract photo URL (photo_reference)
         val photoRegex = "photo_reference=([^,}]+)".toRegex()
         val photoMatch = photoRegex.find(json_s)
-        val photoUrl = "https://maps.googleapis.com/maps/api/place/photo?maxheight=400&&maxwidth=400&photoreference=" + (photoMatch?.groups?.get(1)?.value ?: "NoPhotoReference")
-        println(photoUrl)
+        val photoUrl = (photoMatch?.groups?.get(1)?.value ?: "NoPhotoReference")
+        //println(photoUrl)
         // 예시 이미지
         // https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=AUGGfZnxOls39TwAZ4rMjkXdrsnpRQeFXOSU5FrsFO-xV6cBjTvmNV2DL-1oORfSqfas7Ck3U-HtahScWyFJcCGqg5xkOuqiFSYS9Ti829KDwnzVCovleGPHl1dLgRfEEjMKT3Bf3W87EixNTyCE9IxbwQ7VIr3Ig8ZYPxj-ixEiMgIVvbZ9
         // 이게 맞는지는 모르겠지만 일단 이리, 일단 이미지 너무 크지않게 400*400으로
         val ratingRegex = "rating=([\\d.]+)".toRegex()
         val ratingMatch = ratingRegex.find(json_s)
         val rating = ratingMatch?.groups?.get(1)?.value?.toDouble() ?: 0.0
-        println(rating)
+        //println(rating)
         //예시 별점 4.5 같이 소스점 한자리까지
         val widthRegex = "width=([\\d.]+)".toRegex()
         val widthMatch = widthRegex.find(json_s)
         val width = widthMatch?.groups?.get(1)?.value?.toDouble() ?: 0.0
-        println(width)
+       // println(width)
 
         // Extract height
         val heightRegex = "height=([\\d.]+)".toRegex()
         val heightMatch = heightRegex.find(json_s)
         val height = heightMatch?.groups?.get(1)?.value?.toDouble() ?: 0.0
-        println(height)
+        //println(height)
+
+        fetchgetPlaceInfo(photoUrl,200 ,navViewModel)
+        var url_pp = navViewModel.fetchReturn
+        println(url_pp)
 
          //Update the block with parsed data
         block.value = ListInfo(
