@@ -77,6 +77,7 @@ fun DetailedRestaurant(navController: NavHostController, navViewModel: NavViewMo
             }
         } catch (e: Exception) {
             Log.e("DetailedRestaurant", "Error loading data: $e")
+            Log.e("DetailedRestaurant", "Result is null")
         }
     }
 

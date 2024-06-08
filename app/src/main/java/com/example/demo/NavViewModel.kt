@@ -29,118 +29,52 @@ import androidx.lifecycle.ViewModel
 // TimeInfo_view 클래스
 class TimeInfo_view {
     var day: String? = null
-        get() = field
-        set(value) {
-            field = value
-        }
-
     var time: String? = null
-        get() = field
-        set(value) {
-            field = value
-        }
 }
-
 // Period_view 클래스
 class Period_view {
     var close: TimeInfo_view? = null
-        get() = field
-        set(value) {
-            field = value
-        }
-
     var open: TimeInfo_view? = null
-        get() = field
-        set(value) {
-            field = value
-        }
+
 }
 
 // OpeningHours_view 클래스
 class OpeningHours_view {
     var open_now: String? = null
-        get() = field
-        set(value) {
-            field = value
-        }
-
     var periods: List<Period_view>? = null
-        get() = field
-        set(value) {
-            field = value
-        }
-
     var weekday_text: List<String>? = null
-        get() = field
-        set(value) {
-            field = value
-        }
 }
 
 // Photo_view 클래스
 class Photo_view {
     var url: String? = null
-        get() = field
-        set(value) {
-            field = value
-        }
 }
 
 // Result_view 클래스
 class Result_view {
     var address: String? = null
-        get() = field
-        set(value) {
-            field = value
-        }
-
     var formatted_phone_number: String? = null
-        get() = field
-        set(value) {
-            field = value
-        }
-
     var name: String? = null
-        get() = field
-        set(value) {
-            field = value
-        }
-
     var opening_hours: OpeningHours_view? = null
-        get() = field
-        set(value) {
-            field = value
-        }
-
     var photo: Photo_view? = null
-        get() = field
-        set(value) {
-            field = value
-        }
-
     var rating: String? = null
-        get() = field
-        set(value) {
-            field = value
-        }
-
 }
 
 // DataModel_view 클래스
 class DataModel_view {
-    var html_attributions: List<String>? = null
+    public var html_attributions: List<String>? = null
         get() = field
         set(value) {
             field = value
         }
 
-    var result: Result_view? = null
+    public var result: Result_view? = null
         get() = field
         set(value) {
             field = value
         }
 
-    var status: String? = null
+    public var status: String? = null
         get() = field
         set(value) {
             field = value

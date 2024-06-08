@@ -33,6 +33,9 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import com.example.demo.fetchgetPlaceInfo
 import kotlinx.coroutines.launch
+import com.example.demo.Result_view
+import com.example.demo.Photo_view
+import com.example.demo.DataModel_view
 
 
 
@@ -198,10 +201,22 @@ private fun FieldTop(
     }
 }
 fun send_info(blockA: MutableState<ListInfo>,navController: NavViewModel) {
-    navController.setRating((blockA.value.rate).toString())
-    navController.setName(blockA.value.name)
-    //navController.setPhotos({blockA.value.img})
-    navController.setAddress(blockA.value.address)
+    val resultView = Result_view().apply {
+        address = blockA.value.address
+        name = blockA.value.name
+        rating = blockA.value.rate.toString()
+        photo = Photo_view().apply {
+            url = blockA.value.img
+        }
+    }
+    // DataModel_view 인스턴스를 생성하고 속성을 설정합니다.
+    val dataModelView = DataModel_view().apply {
+        result = resultView
+        status = "OK" // 데이터가 있는 경우 상태를 "OK"로 설정
+    }
+    // ViewModel에 새로운 DataModel_view 설정
+    navController.setData(dataModelView)
+
 }
 
 @Composable
