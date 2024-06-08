@@ -52,22 +52,34 @@ data class RestaurantData(
 @OptIn(ExperimentalMaterial3Api::class)
 fun DetailedRestaurant(navController: NavHostController, navViewModel: NavViewModel = viewModel()) {
     Log.d("DetailedRestaurant", "Composable function started")
-    val restaurantData: RestaurantData? = navViewModel.getData()?.result?.let {
-        RestaurantData(
-            name = it.name ?: "이름 없음",
-            rating = it.rating ?: "0.0",
-            reviewCount = 107,
-            phoneNumber = "010-3424-2211",
-            hasPhoneNumber = !it.formatted_phone_number.isNullOrEmpty(),
-            imageUrl1 = it.photo?.let { photo -> photo.url ?: "" } ?: "",
-            operatingHoursText = it.opening_hours?.weekday_text?.joinToString("\n") ?: "운영 시간 없음",
-            hasOperatingHours = it.opening_hours != null,
-            hashtags = listOf("#맛집", "#가성비", "현지인 맛집"),
-            address = it.address ?: "주소 없음"
-        )
+
+    // 초기 상태 설정
+    var restaurantData by remember { mutableStateOf<RestaurantData?>(null) }
+    val context = LocalContext.current
+
+    // 데이터 로드
+    LaunchedEffect(navViewModel) {
+        try {
+            val result = navViewModel.getData()?.result
+            if (result != null) {
+                restaurantData = RestaurantData(
+                    name = result.name ?: "이름 없음",
+                    rating = result.rating ?: "0.0",
+                    reviewCount = 107,
+                    phoneNumber = result.formatted_phone_number ?: "전화번호 없음",
+                    hasPhoneNumber = !result.formatted_phone_number.isNullOrEmpty(),
+                    imageUrl1 = result.photo?.let { photo -> photo.url ?: "" } ?: "",
+                    operatingHoursText = result.opening_hours?.weekday_text?.joinToString("\n") ?: "운영 시간 없음",
+                    hasOperatingHours = result.opening_hours != null,
+                    hashtags = listOf("#맛집", "#가성비", "현지인 맛집"),
+                    address = result.address ?: "주소 없음"
+                )
+            }
+        } catch (e: Exception) {
+            Log.e("DetailedRestaurant", "Error loading data: $e")
+        }
     }
 
-    Log.d("NavViewModel", "Data loaded: $navViewModel.getData()?.result")
     Log.d("DetailedRestaurant", "Restaurant data: $restaurantData")
 
     DemoTheme {
@@ -86,12 +98,14 @@ fun DetailedRestaurant(navController: NavHostController, navViewModel: NavViewMo
             }
         ) { innerPadding ->
             Box(
-                modifier = Modifier.padding(innerPadding).fillMaxSize(),
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
                 if (restaurantData != null) {
                     MainContent(
-                        restaurantData = restaurantData,
+                        restaurantData = restaurantData!!,
                         modifier = Modifier.fillMaxSize(),
                         navController = navController
                     )
@@ -451,7 +465,7 @@ fun handlePhoneClick(phoneNumber: String, context: Context) {
     if (intent.resolveActivity(context.packageManager) != null) {
         context.startActivity(intent)
     } else {
-        Log.e("DetailedRestaurant", "다이얼러 앱이 없습니다.")
+        Log.e("DetailedRestaurant",  "앱이 없습니다.")
     }
 }
 
