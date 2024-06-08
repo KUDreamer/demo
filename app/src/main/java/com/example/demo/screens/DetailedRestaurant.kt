@@ -3,6 +3,7 @@ package com.example.demo.screens
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,9 +18,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import coil.compose.AsyncImage
@@ -36,10 +34,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.demo.NavViewModel
 import com.example.demo.Routes
-import com.example.demo.Photo_view
-import com.example.demo.OpeningHours_view
-import com.example.demo.Result_view
-import com.example.demo.DataModel_view
 
 data class RestaurantData(
     val name: String,
@@ -56,63 +50,32 @@ data class RestaurantData(
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-
 fun DetailedRestaurant(navController: NavHostController, navViewModel: NavViewModel = viewModel()) {
-    // Example data to be used in NavViewModel
-    val samplePhotos = navViewModel.getPhoto()
-
-    val sampleOpeningHours = OpeningHours_view().apply {
-        open_now = "true"
-        weekday_text = listOf(
-            "평일 09:00-13:00 브레이크 타임 13:00 라스트 오더",
-            "09:00-13:00 토요일",
-            "09:00-13:00 일요일",
-            "09:00-13:00 휴일",
-            "09:00-13:00 그 외 쉬는날"
-        )
-    }
-
-    val sampleResult = Result_view().apply {
-        address = "서울시 광진구 뭐시기 저시기"
-        formatted_phone_number = "010-1234-1234"
-        name = "마라비빔면&쇠고기"
-        opening_hours = sampleOpeningHours
-        photo = samplePhotos
-        rating = "2.6"
-    }
-
-    val sampleDataModel = DataModel_view().apply {
-        result = sampleResult
-        status = "OK"
-    }
-
-    // Set sample data to ViewModel
-
-    val real_DataModel = navViewModel.getData()
-
-    navViewModel.setData(sampleDataModel)
-
-    val restaurantData = navViewModel.dataModel.value?.result?.let {
+    Log.d("DetailedRestaurant", "Composable function started")
+    val restaurantData: RestaurantData? = navViewModel.getData()?.result?.let {
         RestaurantData(
-            name = it.name ?: "",
+            name = it.name ?: "이름 없음",
             rating = it.rating ?: "0.0",
             reviewCount = 107,
-            phoneNumber = it.formatted_phone_number ?: "",
-            hasPhoneNumber = it.formatted_phone_number != null,
-            imageUrl1 = (it.photo.toString()),
-            operatingHoursText = it.opening_hours?.weekday_text?.joinToString("\n") ?: "",
+            phoneNumber = "010-3424-2211",
+            hasPhoneNumber = !it.formatted_phone_number.isNullOrEmpty(),
+            imageUrl1 = it.photo?.let { photo -> photo.url ?: "" } ?: "",
+            operatingHoursText = it.opening_hours?.weekday_text?.joinToString("\n") ?: "운영 시간 없음",
             hasOperatingHours = it.opening_hours != null,
-            hashtags = listOf("#냉면", "#마라마라", "#마라마라기"),
-            address = it.address.toString()
+            hashtags = listOf("#맛집", "#가성비", "현지인 맛집"),
+            address = it.address ?: "주소 없음"
         )
     }
+
+    Log.d("NavViewModel", "Data loaded: $navViewModel.getData()?.result")
+    Log.d("DetailedRestaurant", "Restaurant data: $restaurantData")
 
     DemoTheme {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {
                 TopAppBar(
-                    title = { Text(text = "") },
+                    title = { Text(text = "식당 상세 정보") },
                     navigationIcon = {
                         BackButton(navController = navController)
                     },
@@ -122,12 +85,19 @@ fun DetailedRestaurant(navController: NavHostController, navViewModel: NavViewMo
                 )
             }
         ) { innerPadding ->
-            restaurantData?.let {
-                MainContent(
-                    restaurantData = it,
-                    modifier = Modifier.padding(innerPadding),
-                    navController = navController
-                )
+            Box(
+                modifier = Modifier.padding(innerPadding).fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                if (restaurantData != null) {
+                    MainContent(
+                        restaurantData = restaurantData,
+                        modifier = Modifier.fillMaxSize(),
+                        navController = navController
+                    )
+                } else {
+                    Text("데이터를 불러오는 중입니다...", color = Color.Gray)
+                }
             }
         }
     }
@@ -147,7 +117,12 @@ fun BackButton(navController: NavHostController) {
 }
 
 @Composable
-fun MainContent(restaurantData: RestaurantData, modifier: Modifier = Modifier, navController: NavHostController, navViewModel: NavViewModel = viewModel()) {
+fun MainContent(
+    restaurantData: RestaurantData,
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    navViewModel: NavViewModel = viewModel()
+) {
     var isExpanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
@@ -270,7 +245,7 @@ fun MainContent(restaurantData: RestaurantData, modifier: Modifier = Modifier, n
                             tint = Color.Unspecified,
                             modifier = Modifier
                                 .size(32.dp)
-                                .clickable { handlePhoneClick(restaurantData.phoneNumber) }
+                                .clickable { handlePhoneClick(restaurantData.phoneNumber, context) }
                         )
                     }
                 }
@@ -290,7 +265,7 @@ fun MainContent(restaurantData: RestaurantData, modifier: Modifier = Modifier, n
                                 .clickable { isExpanded = !isExpanded }
                         ) {
                             Text(
-                                text = "영업중 09:00-13:00",
+                                text = if (isExpanded) "영업중" else "닫힘",
                                 fontSize = 18.sp,
                                 fontFamily = FontFamily(Font(R.font.pretandard_variable)),
                                 fontWeight = FontWeight.Bold,
@@ -420,7 +395,7 @@ fun MainContent(restaurantData: RestaurantData, modifier: Modifier = Modifier, n
             onClick = {
                 val adding = navViewModel.getData()
                 if (adding != null) {
-                    navViewModel.addDataModelForDate(navViewModel.getCurrentDate().toString(),adding)
+                    navViewModel.addDataModelForDate(navViewModel.getCurrentDate().toString(), adding)
                 }
                 navController.navigate(Routes.Date.route)
             },
@@ -469,19 +444,24 @@ fun DetailedRestaurantPreview() {
     }
 }
 
-fun handlePhoneClick(phoneNumber: String) {
-    // TODO: 전화번호 클릭 이벤트 처리 로직 추가
+fun handlePhoneClick(phoneNumber: String, context: Context) {
+    val intent = Intent(Intent.ACTION_DIAL).apply {
+        data = Uri.parse("tel:$phoneNumber")
+    }
+    if (intent.resolveActivity(context.packageManager) != null) {
+        context.startActivity(intent)
+    } else {
+        Log.e("DetailedRestaurant", "다이얼러 앱이 없습니다.")
+    }
 }
 
 fun handleMapClick(url: String, context: Context) {
-    // Create an intent using the provided URL
-    val mapIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-    mapIntent.setPackage("com.google.android.apps.maps")
+    val mapIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+        setPackage("com.google.android.apps.maps")
+    }
     if (mapIntent.resolveActivity(context.packageManager) != null) {
         context.startActivity(mapIntent)
     } else {
-        // If Google Maps app is not installed, open with web browser
-        val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-        context.startActivity(webIntent)
+        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
     }
 }

@@ -18,9 +18,6 @@ dateModels<map <string,list<datamodel_view>> >
 날짜 별로 여러가지 datamodel(하나의 여행지, 식당) 을 담음
  */
 
-
-
-
 package com.example.demo
 
 import androidx.lifecycle.LiveData
@@ -168,7 +165,7 @@ class NavViewModel : ViewModel() {
     private val _dataModel = MutableLiveData<DataModel_view>()
     val dataModel: LiveData<DataModel_view> get() = _dataModel
 
-    // 여행 시작 및 종료 날짜
+    //여행 시작 및 종료 날짜
     //여행 날짜 시작 string
     private val _startDate = MutableLiveData<String>()
     //여행 끝나는 날짜 String
