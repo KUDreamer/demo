@@ -98,6 +98,10 @@ interface ApiService {
 
     @POST("api/directions")
     fun getDirectionsNew(@Body request: Map<String, String>): Call<ResponseBody>
+
+    @FormUrlEncoded
+    @GET("api/placePhoto")
+    suspend fun getPlaceInfoNew(@Field("photoReference") query: String, @Field("maxWidth") size: Int): Response<PlaceInfoA>
 }
 
 object RetrofitClient {
@@ -160,7 +164,7 @@ suspend fun fetchPlaceFromQuery(query: String, viewModel: NavViewModel) {
 suspend fun fetchgetPlaceInfo(query: String, size: Int, viewModel: NavViewModel) {
     try {
         // API 호출
-        val response = RetrofitClient.apiService.getPlaceInfo(query, size)
+        val response = RetrofitClient.apiService.getPlaceInfoNew(query, size)
         // 응답이 성공적인 경우
         if (response.isSuccessful) {
             val placeInfoA = response.body() // 이미 변환된 PlaceInfo 객체를 얻음
