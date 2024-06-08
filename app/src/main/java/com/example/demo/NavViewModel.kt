@@ -20,6 +20,8 @@ dateModels<map <string,list<datamodel_view>> >
 
 package com.example.demo
 
+import android.util.Log
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -152,13 +154,18 @@ class NavViewModel : ViewModel() {
     // fetchReturnNew 새로운 버전
     var fetchReturn: String? = null
     var fetchReturnNew: String? = null
+    var lifCycleOwner:LifecycleOwner? = null
 
     fun sendFetchReturn(output: String?, viewModel: NavViewModel) {
         viewModel.fetchReturn = output
     }
 
-    fun sendFetchReturnNew(output: String?, viewModel: NavViewModel) {
-        viewModel.fetchReturnNew = output
+    private val _fetchResult = MutableLiveData<String>()
+    val fetchResult: LiveData<String> get() = _fetchResult
+
+    fun sendFetchReturnNew(output: String, viewModel: NavViewModel) {
+        _fetchResult.value = output
+        Log.d("asas", "output come to sendFetchRetrunNew")
     }
 
     // data model -- > api에서 가져온 데이터들이 들어가있는 view model
@@ -251,6 +258,7 @@ class NavViewModel : ViewModel() {
     fun getRating(): String? {
         return _dataModel.value?.result?.rating
     }
+
 
     // HtmlAttributions setting and getting method
     fun setHtmlAttributions(htmlAttributions: List<String>?) {

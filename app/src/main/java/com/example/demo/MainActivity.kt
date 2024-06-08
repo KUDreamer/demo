@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.demo.db.Day
@@ -47,6 +48,7 @@ fun SetProject() {
     val tripViewModel: TripViewModel =
         viewModel(factory = TripViewModelFactory(Repository(tripdb)))
     val navViewModel: NavViewModel = viewModel()
+    navViewModel.lifCycleOwner = LocalLifecycleOwner.current
     val navController = rememberNavController()
 
     LaunchedEffect(Unit) {
