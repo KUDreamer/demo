@@ -212,14 +212,12 @@ fun send_info(blockA: MutableState<ListInfo>,navController: NavViewModel) {
             url = blockA.value.img
         }
     }
-    // DataModel_view 인스턴스를 생성하고 속성을 설정합니다.
+
     val dataModelView = DataModel_view().apply {
         result = resultView
-        status = "OK" // 데이터가 있는 경우 상태를 "OK"로 설정
+        status = "OK"
     }
-    // ViewModel에 새로운 DataModel_view 설정
     navController.setData(dataModelView)
-
 }
 
 @Composable
