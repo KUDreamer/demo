@@ -1,6 +1,9 @@
 package com.example.demo.screens
 
 import android.util.Log
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,10 +45,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.example.demo.NavViewModel
 import com.example.demo.Routes
 import com.example.demo.Timeline
-import com.example.demo.fetchPlaceFromQuery
 import com.example.demo.db.TripViewModel
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -55,7 +56,7 @@ import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel, navViewModel: NavViewModel) {
+fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel) {
 
     val currentDate = LocalDate.now()
 
@@ -77,14 +78,14 @@ fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel, n
     Scaffold(
         topBar = {
             TopAppBar(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
                     .padding(vertical = 10.dp),
                 title = {
                     Box(
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
-
                         currentTrip?.let {
                             Text(
                                 text = it.title,
@@ -104,7 +105,7 @@ fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel, n
                     }
                 },
                 actions = {
-                    IconButton(onClick = { navController.navigate(Routes.DetailedSchedule.route) }) {
+                    IconButton(onClick = { navController.navigate(Routes.AddSchedule.route) }) {
                         Icon(
                             imageVector = Icons.Outlined.Create,
                             contentDescription = "edit",
@@ -136,50 +137,66 @@ fun MainScreen(navController: NavHostController, tripViewModel: TripViewModel, n
 
                 var expanded by remember { mutableStateOf(daysDifference == 0L) }
 
-                Row(
+                Column(
                     modifier = Modifier
-                        .clickable { expanded = !expanded }
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Spacer(modifier = Modifier.width(15.dp))
-                    Card(
-                        modifier = Modifier
-                            .width(56.dp)
-                            .height(28.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = dDayColor,
-                        ),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            text = dDayText,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight(500),
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .wrapContentSize(Alignment.Center)
+                        .animateContentSize(
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioNoBouncy,
+                                stiffness = Spring.StiffnessLow
+                            )
                         )
+                        .clickable { expanded = !expanded }
+                        .fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+//                            .clickable { expanded = !expanded }
+                            .fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Spacer(modifier = Modifier.width(15.dp))
+                        Card(
+                            modifier = Modifier
+                                .width(56.dp)
+                                .height(28.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = dDayColor,
+                            ),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = dDayText,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight(500),
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .wrapContentSize(Alignment.Center)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = day.date.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + " (${
+                                getDayOfWeekKor(
+                                    day.dayOfWeek
+                                )
+                            })",
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight(500)
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        Icon(
+                            imageVector = if (expanded)
+                                Icons.Default.KeyboardArrowDown
+                            else
+                                Icons.Default.KeyboardArrowUp,
+                            contentDescription = "Toggle Icon"
+                        )
+                        Spacer(modifier = Modifier.width(20.dp))
                     }
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = day.date.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + " (${getDayOfWeekKor(day.dayOfWeek)})",
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight(500)
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    Icon(
-                        imageVector = if (expanded)
-                            Icons.Default.KeyboardArrowDown
-                        else
-                            Icons.Default.KeyboardArrowUp,
-                        contentDescription = "Toggle Icon"
-                    )
-                    Spacer(modifier = Modifier.width(20.dp))
-                }
-                if (expanded) {
-                    currentPlaces[day.id]?.let { places ->
-                        Timeline(places)
+                    if (expanded) {
+                        currentPlaces[day.id]?.let { places ->
+                            Timeline(places)
+                        }
                     }
                 }
             }
