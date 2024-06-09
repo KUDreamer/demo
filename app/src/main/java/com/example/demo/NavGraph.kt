@@ -76,11 +76,11 @@ fun NavGraph(navController: NavHostController, navViewModel: NavViewModel, tripV
             }
 
             composable(route = Routes.MainScreen.route) {
-                MainScreen(navController, tripViewModel, navViewModel)
+                MainScreen(navController, tripViewModel)
             }
 
             composable(route = Routes.MyTrip.route) {
-                MyTrip(navController, tripViewModel, navViewModel)
+                MyTrip(navController, tripViewModel)
             }
 
             composable(route = Routes.NewTrip.route) {
