@@ -83,7 +83,7 @@ fun TimelineNode(
     circleParameters: CircleParameters,
     lineParameters: LineParameters? = null,
     contentStartOffset: Dp = 11.dp,
-    spacer: Dp = 32.dp,
+    spacer: Dp = 1.dp, // 32.dp
     content: @Composable BoxScope.(modifier: Modifier) -> Unit
 ) {
     Box(
@@ -101,8 +101,8 @@ fun TimelineNode(
                     drawLine(
                         brush = it.brush,
                         start = Offset(x = startXPx, y = circleRadiusInPx * 2),
-//                        end = Offset(x = startXPx, y = circleRadiusInPx * 2 + 24f),
-                        end = Offset(x = startXPx, y = this.size.height),
+                        end = Offset(x = startXPx, y = circleRadiusInPx * 2 + 100f),
+//                        end = Offset(x = startXPx, y = this.size.height),
                         strokeWidth = it.strokeWidth.toPx(),
                         pathEffect = dashEffect
                     )
@@ -140,7 +140,7 @@ fun TimelineNode(
 fun PlaceBubble(place: Place, modifier: Modifier) {
     Row(
         modifier = modifier
-            .height(100.dp)
+            .height(58.dp)
     ) {
         Text(text = place.name)
         if (place.time != null)
@@ -155,7 +155,7 @@ fun PlaceBubble(place: Place, modifier: Modifier) {
 fun RouteBubble(modifier: Modifier) {
     Row(
         modifier = modifier
-            .height(100.dp)
+            .height(50.dp)
     ) {
         Text(text = "도보 | 약 30분")
         Spacer(modifier = Modifier.weight(1f))
@@ -198,7 +198,8 @@ fun Timeline(places: List<Place>) {
                     circleParameters = CircleParametersDefaults.circleParameters(
                         radius = 12.dp,
                         stroke = StrokeParameters(color = Color(0xFFFF9730), width = 2.dp)
-                    )
+                    ),
+                    spacer = 20.dp
                 ) { modifier -> PlaceBubble(place, modifier) }
             else {
                 TimelineNode(
