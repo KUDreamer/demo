@@ -289,7 +289,9 @@ private fun to_make_schedul(
             if (isButtonEnabled) {
                 navController.navigate(Routes.DetailedSchedule.route)  // 버튼이 활성화 상태일 때만 네비게이션 실행
                 //navController.navigate(Routes.DetailedRestaurant.route,selectedDates)
-                //navViewModel.setdate?
+
+                navViewModel.setCurrentDate(selectedDates[0].toString())
+                navViewModel.setEndDate(selectedDates[1].toString())
             }
         },
         modifier = Modifier
