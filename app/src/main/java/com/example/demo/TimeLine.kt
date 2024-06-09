@@ -152,12 +152,16 @@ fun PlaceBubble(place: Place, modifier: Modifier) {
 }
 
 @Composable
-fun RouteBubble(modifier: Modifier) {
+fun RouteBubble(place: Place, modifier: Modifier) {
     Row(
         modifier = modifier
             .height(50.dp)
     ) {
-        Text(text = "도보 | 약 30분")
+        Spacer(modifier = Modifier.width(10.dp))
+        place.route?.let {
+            Text(text = it,
+                fontSize = 12.sp)
+        }
         Spacer(modifier = Modifier.weight(1f))
         Button(
             onClick = { },
@@ -198,8 +202,7 @@ fun Timeline(places: List<Place>) {
                     circleParameters = CircleParametersDefaults.circleParameters(
                         radius = 12.dp,
                         stroke = StrokeParameters(color = Color(0xFFFF9730), width = 2.dp)
-                    ),
-                    spacer = 20.dp
+                    )
                 ) { modifier -> PlaceBubble(place, modifier) }
             else {
                 TimelineNode(
@@ -217,7 +220,7 @@ fun Timeline(places: List<Place>) {
                         stroke = StrokeParameters(color = Color(0xFF000000), width = 1.dp)
                     ),
                     lineParameters = LineParametersDefaults.dashedLine()
-                ) { modifier -> RouteBubble(modifier) }
+                ) { modifier -> RouteBubble(place, modifier) }
             }
         }
     }

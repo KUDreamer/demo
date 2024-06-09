@@ -47,7 +47,6 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.example.demo.NavViewModel
 import com.example.demo.R
 import com.example.demo.Routes
 import com.example.demo.db.Trip
@@ -69,7 +68,7 @@ fun getRandomColor(): Color {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyTrip(navController: NavHostController, tripViewModel: TripViewModel, navViewModel: NavViewModel) {
+fun MyTrip(navController: NavHostController, tripViewModel: TripViewModel) {
 
     val tripList by tripViewModel.tripList.collectAsState()
 

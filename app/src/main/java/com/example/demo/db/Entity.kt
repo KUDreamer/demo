@@ -48,5 +48,6 @@ data class Place(
     val dayId: Int,
     val name: String,
     val time: String? = null,
+    val route: String? = null
 //    val move: List<String>
 )
