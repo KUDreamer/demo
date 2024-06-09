@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.demo.NavViewModel
 import com.example.demo.Routes
+import java.net.URLEncoder
 
 data class RestaurantData(
     val name: String,
@@ -363,10 +364,8 @@ fun MainContent(
                     Box(
                         modifier = Modifier
                             .clickable {
-                                handleMapClick(
-                                    "https://www.google.com/maps/place/%EC%B0%B8%EB%A7%9B%EC%A7%91/data=!4m10!1m2!2m1!1z66eb7KeR!3m6!1s0x357ca38cd1268333:0x9b7d8a1cb4a868ca!8m2!3d37.5656544!4d126.9647906!15sCgbrp5vsp5FaCCIG66eb7KeRkgETYmFyYmVjdWVfcmVzdGF1cmFudJoBI0NoWkRTVWhOTUc5blMwVkpRMEZuU1VOcGNXVXRSMWhuRUFF4AEA!16s%2Fg%2F11hz5vqk8_?entry=ttu",
-                                    context
-                                )
+                                    handleMapClick(restaurantData.name.toString(),context
+                                    )
                             }
                             .size(width = 102.dp, height = 30.dp) // 크기 조정
                     ) {
@@ -465,13 +464,23 @@ fun handlePhoneClick(phoneNumber: String, context: Context) {
     }
 }
 
-fun handleMapClick(url: String, context: Context) {
-    val mapIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+fun handleMapClick(searchQuery: String, context: Context) {
+    // 구글 지도 검색 URL 템플릿
+    val mapUrlTemplate = "https://www.google.com/maps/search/?api=1&query=%s"
+
+    // 검색어를 URL 인코딩
+    val encodedQuery = URLEncoder.encode(searchQuery, "UTF-8")
+    val mapUrl = String.format(mapUrlTemplate, encodedQuery)
+
+    // 구글 지도 앱 인텐트 생성
+    val mapIntent = Intent(Intent.ACTION_VIEW, Uri.parse(mapUrl)).apply {
         setPackage("com.google.android.apps.maps")
     }
+
+    // 구글 지도 앱이 설치되어 있는 경우 앱에서 열기, 그렇지 않으면 브라우저에서 열기
     if (mapIntent.resolveActivity(context.packageManager) != null) {
         context.startActivity(mapIntent)
     } else {
-        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(mapUrl)))
     }
 }
