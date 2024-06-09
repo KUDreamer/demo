@@ -72,8 +72,8 @@ private suspend fun respone_text(block: MutableState<ListInfo>, searchText: Stri
         val photoMatch = photoRegex.find(json_s)
         val photoUrl = (photoMatch?.groups?.get(1)?.value ?: "NoPhotoReference")
         val photoUrlA = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=$photoUrl&key=AIzaSyAOWi8i0eZwjY2IXYe9-SCQNUdOE5dJcec"
-        println(photoUrl)
-        println(photoUrlA)
+        //println(photoUrl)
+        //println(photoUrlA)
         // 예시 이미지
         // https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=AUGGfZnxOls39TwAZ4rMjkXdrsnpRQeFXOSU5FrsFO-xV6cBjTvmNV2DL-1oORfSqfas7Ck3U-HtahScWyFJcCGqg5xkOuqiFSYS9Ti829KDwnzVCovleGPHl1dLgRfEEjMKT3Bf3W87EixNTyCE9IxbwQ7VIr3Ig8ZYPxj-ixEiMgIVvbZ9
         // 이게 맞는지는 모르겠지만 일단 이리, 일단 이미지 너무 크지않게 400*400으로
@@ -95,7 +95,7 @@ private suspend fun respone_text(block: MutableState<ListInfo>, searchText: Stri
 
         fetchgetPlaceInfo(photoUrl,200 ,navViewModel)
         var url_pp = navViewModel.fetchReturn
-        println(url_pp)
+        //println(url_pp)
         Log.d("testtest", photoUrl)
 
 
@@ -116,17 +116,14 @@ private suspend fun respone_text(block: MutableState<ListInfo>, searchText: Stri
 }
 
 
-fun modifySearchText(original: String, isis: Int): String {
+fun modifySearchText(original: String, shift: Int): String {
     return original.map { char ->
-        // Shift the character by `isis` positions in the ASCII table
-        val shiftedChar = char + isis
-        if (shiftedChar.toInt() > 126) {
-            (shiftedChar - 95).toChar() // Wrap around to the beginning of printable characters
-        } else {
-            shiftedChar.toChar()
-        }
+        // 현재 문자의 아스키 값을 가져와서 shift 만큼 이동한 새로운 아스키 값의 문자를 반환
+        val shiftedChar = (char.toInt() + shift).toChar()
+        shiftedChar
     }.joinToString("")
 }
+
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -191,7 +188,7 @@ private fun FieldTop(
                     coroutineScope.launch {
                         for (i in 0 until 8) {
                             val modifiedSearchText = modifySearchText(searchText, i)
-                            respone_text(blocks[i], searchText, navViewModel)
+                            respone_text(blocks[i], modifiedSearchText, navViewModel)
                         }
                     }
                 }
