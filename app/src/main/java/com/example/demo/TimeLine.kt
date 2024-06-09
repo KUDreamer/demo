@@ -1,5 +1,8 @@
 package com.example.demo
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -25,11 +28,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.demo.db.Place
+import java.net.URLEncoder
 
 object CircleParametersDefaults {
 
@@ -152,19 +157,23 @@ fun PlaceBubble(place: Place, modifier: Modifier) {
 }
 
 @Composable
-fun RouteBubble(place: Place, modifier: Modifier) {
+fun RouteBubble(place: Place, nextPlace: Place, modifier: Modifier) {
+    val context = LocalContext.current
+
     Row(
         modifier = modifier
             .height(50.dp)
     ) {
         Spacer(modifier = Modifier.width(10.dp))
         place.route?.let {
-            Text(text = it,
-                fontSize = 12.sp)
+            Text(
+                text = it,
+                fontSize = 12.sp
+            )
         }
         Spacer(modifier = Modifier.weight(1f))
         Button(
-            onClick = { },
+            onClick = { handleDirectionsClick(origin = place.name, destination = nextPlace.name, context = context) },
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFFFF9730)
             ),
@@ -195,8 +204,8 @@ fun Timeline(places: List<Place>) {
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        places.forEach { place ->
-            if (place == places[places.size - 1])
+        places.forEachIndexed { index, place ->
+            if (index == places.size-1)
                 TimelineNode(
                     TimelineNodePosition.LAST,
                     circleParameters = CircleParametersDefaults.circleParameters(
@@ -220,8 +229,30 @@ fun Timeline(places: List<Place>) {
                         stroke = StrokeParameters(color = Color(0xFF000000), width = 1.dp)
                     ),
                     lineParameters = LineParametersDefaults.dashedLine()
-                ) { modifier -> RouteBubble(place, modifier) }
+                ) { modifier -> RouteBubble(place, places[index+1], modifier) }
             }
         }
+    }
+}
+
+fun handleDirectionsClick(origin: String, destination: String, context: Context) {
+    // 구글 지도 길찾기 URL 템플릿
+    val directionsUrlTemplate = "https://www.google.com/maps/dir/?api=1&origin=%s&destination=%s"
+
+    // 출발지와 도착지를 URL 인코딩
+    val encodedOrigin = URLEncoder.encode(origin, "UTF-8")
+    val encodedDestination = URLEncoder.encode(destination, "UTF-8")
+    val directionsUrl = String.format(directionsUrlTemplate, encodedOrigin, encodedDestination)
+
+    // 구글 지도 앱 인텐트 생성
+    val mapIntent = Intent(Intent.ACTION_VIEW, Uri.parse(directionsUrl)).apply {
+        setPackage("com.google.android.apps.maps")
+    }
+
+    // 구글 지도 앱이 설치되어 있는 경우 앱에서 열기, 그렇지 않으면 브라우저에서 열기
+    if (mapIntent.resolveActivity(context.packageManager) != null) {
+        context.startActivity(mapIntent)
+    } else {
+        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(directionsUrl)))
     }
 }
